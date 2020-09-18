@@ -1,3 +1,4 @@
+import textwrap
 
 class GameState():
     def __init__(self):
@@ -19,6 +20,33 @@ class GameState():
         self.board[move.endRow][move.endCol] = move.pieceMoved
         self.gameLog.append(move)
         self.whiteToMove = not self.whiteToMove
+        print("move: " + move.getChessNotation())
+
+
+    def undoMove(self):
+        if len(self.gameLog) > 0:
+            last_move = self.gameLog.pop()  # take and remove in one passage
+            self.board[last_move.startRow][last_move.startCol] = last_move.pieceMoved
+            self.board[last_move.endRow][last_move.endCol] = last_move.pieceCaptured
+            self.whiteToMove = not self.whiteToMove
+            print("undo: " + last_move.getChessNotation())
+
+    def restoreMove(self):
+        #TODO
+        pass
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 class Move():
     ranksToRows = {
@@ -49,7 +77,17 @@ class Move():
         self.pieceCaptured = board[self.endRow][self.endCol]
 
     def getChessNotation(self):
-        return self.getRankFile(self.startRow, self.startCol) + self.getRankFile(self.endRow, self.endCol)
+        return self.getRankFile(self.startRow, self.startCol) + "-" +  self.getRankFile(self.endRow, self.endCol)
 
     def getRankFile(self, row, col):
         return self.colsToFiles[col] + self.rowsToRanks[row]
+
+
+
+board = "{:064b}".format(2 | 1)
+
+def print_board(board):
+    print('\n'.join([' '.join(textwrap.wrap(line,1)) for line in textwrap.wrap(board, 8)]))
+
+if __name__ == "__main__":
+    print_board(board)

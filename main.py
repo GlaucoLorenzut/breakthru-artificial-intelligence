@@ -28,10 +28,12 @@ def main():
     playerClicks = []
 
     while running:
-        for e in pygame.event.get():
-            if e.type == pygame.QUIT:
+        for event in pygame.event.get():
+
+            if event.type == pygame.QUIT:
                 running = False
-            elif e.type == pygame.MOUSEBUTTONDOWN:
+
+            elif event.type == pygame.MOUSEBUTTONDOWN:
                 location = pygame.mouse.get_pos()
                 col = location[0] // SQ_SIZE
                 row = location[1] // SQ_SIZE
@@ -44,8 +46,13 @@ def main():
 
                 if len(playerClicks) == 2:
                     move = game_engine.Move(playerClicks[0], playerClicks[1], game.board)
-                    print(move.getChessNotation())
                     game.makeMove(move)
+                    sqSelected = ()
+                    playerClicks = []
+
+            elif event.type == pygame.KEYDOWN:
+                if event.key == pygame.K_DOWN:
+                    game.undoMove()
                     sqSelected = ()
                     playerClicks = []
 
