@@ -3,23 +3,29 @@ import textwrap
 class GameState():
     def __init__(self):
         self.board = [
-            ["bR", "bN", "bB", "bQ", "bK", "bB", "bN", "bR"],
-            ["bp", "bp", "bp", "bp", "bp", "bp", "bp", "bp"],
-            ["--", "--", "--", "--", "--", "--", "--", "--"],
-            ["--", "--", "--", "--", "--", "--", "--", "--"],
-            ["--", "--", "--", "--", "--", "--", "--", "--"],
-            ["--", "--", "--", "--", "--", "--", "--", "--"],
-            ["wp", "wp", "wp", "wp", "wp", "wp", "wp", "wp"],
-            ["wR", "wN", "wB", "wQ", "wK", "wB", "wN", "wR"]
+            ["--", "--", "--", "--", "--", "--", "--", "--", "--", "--", "--"],
+            ["--", "--", "--", "bR", "bR", "bR", "bR", "bR", "--", "--", "--"],
+            ["--", "--", "--", "--", "--", "--", "--", "--", "--", "--", "--"],
+            ["--", "bR", "--", "--", "wR", "wR", "wR", "--", "--", "bR", "--"],
+            ["--", "bR", "--", "wR", "--", "--", "--", "wR", "--", "bR", "--"],
+            ["--", "bR", "--", "wR", "--", "wK", "--", "wR", "--", "bR", "--"],
+            ["--", "bR", "--", "wR", "--", "--", "--", "wR", "--", "bR", "--"],
+            ["--", "bR", "--", "--", "wR", "wR", "wR", "--", "--", "bR", "--"],
+            ["--", "--", "--", "--", "--", "--", "--", "--", "--", "--", "--"],
+            ["--", "--", "--", "bR", "bR", "bR", "bR", "bR", "--", "--", "--"],
+            ["--", "--", "--", "--", "--", "--", "--", "--", "--", "--", "--"]
         ]
         self.whiteToMove = True
         self.gameLog = []
+        self.restoreLog = []
 
     def makeMove(self, move):
         self.board[move.startRow][move.startCol] = "--"
         self.board[move.endRow][move.endCol] = move.pieceMoved
         self.gameLog.append(move)
         self.whiteToMove = not self.whiteToMove
+
+        self.restoreLog = []
         print("move: " + move.getChessNotation())
 
 
@@ -29,11 +35,19 @@ class GameState():
             self.board[last_move.startRow][last_move.startCol] = last_move.pieceMoved
             self.board[last_move.endRow][last_move.endCol] = last_move.pieceCaptured
             self.whiteToMove = not self.whiteToMove
+
+            self.restoreLog.append(last_move)
             print("undo: " + last_move.getChessNotation())
 
     def restoreMove(self):
-        #TODO
-        pass
+        if len(self.restoreLog) > 0:
+            restore_move = self.restoreLog.pop()  # take and remove in one passage
+
+            self.board[restore_move.startRow][restore_move.startCol] = "--"
+            self.board[restore_move.endRow][restore_move.endCol] = restore_move.pieceMoved
+            self.whiteToMove = not self.whiteToMove
+            self.gameLog.append(restore_move)
+            print("restore: " + restore_move.getChessNotation())
 
 
 
@@ -50,20 +64,27 @@ class GameState():
 
 class Move():
     ranksToRows = {
-        "1": 7, "2": 6,
-        "3": 5, "4": 4,
-        "5": 3, "6": 2,
-        "7": 1, "8": 0
+        "1": 10, "2": 9,
+        "3": 8, "4": 7,
+        "5": 6, "6": 5,
+        "7": 4, "8": 3,
+        "9": 2, "10": 1,
+        "11": 0
     }
+
     rowsToRanks = {
         v : k for k, v in ranksToRows.items()
     }
+
     filesToCols = {
         "a": 0, "b": 1,
         "c": 2, "d": 3,
         "e": 4, "f": 5,
-        "g": 6, "h": 7
+        "g": 6, "h": 7,
+        "i": 8, "j": 9,
+        "k": 10
     }
+
     colsToFiles = {
         v : k for k, v in filesToCols.items()
     }
