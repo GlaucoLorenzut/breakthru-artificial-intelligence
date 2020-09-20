@@ -1,6 +1,9 @@
 import textwrap
 
+
 class GameState():
+
+
     def __init__(self):
         self.board = [
             ["--", "--", "--", "--", "--", "--", "--", "--", "--", "--", "--"],
@@ -19,12 +22,12 @@ class GameState():
         self.gameLog = []
         self.restoreLog = []
 
+
     def isValidPiece(self, row, col):
         if self.board[row][col] == "--":
             return False
         else:
             return True
-
 
 
     def makeMove(self, move):
@@ -35,6 +38,7 @@ class GameState():
 
         self.restoreLog = []
         print("move: " + move.ID)
+        self.printBoard()
 
 
     def undoMove(self):
@@ -47,6 +51,7 @@ class GameState():
             self.restoreLog.append(last_move)
             print("undo: " + last_move.ID)
 
+
     def restoreMove(self):
         if len(self.restoreLog) > 0:
             restore_move = self.restoreLog.pop()  # take and remove in one passage
@@ -57,38 +62,43 @@ class GameState():
             self.gameLog.append(restore_move)
             print("restore: " + restore_move.ID)
 
-    def getValidMoves(self):
-        return self.getAllPossibleMoves()
 
     def getAllPossibleMoves(self):
+        print("start")
         moves = []
         for r in range(len(self.board)):  # number of rows
             for c in range(len(self.board[r])):
                 turn = self.board[r][c][0]
                 if (turn == 'w' and self.whiteToMove) or (turn == 'b' and not self.whiteToMove): #TODO chec
-                    piece = self.board[r][c][1]
-                    if piece == 'R':
-                        self.getRookMoves(r, c, moves)
-                    elif piece == "K":
-                        self.getKingMoves(r, c, moves)
-
+                    self.getPieceMoves(r, c, moves)
+        print("end\n")
         return moves
 
 
+    def getPieceMoves(self, r, c, moves):
+        directions = ((-1, 0), (0, -1), (1, 0), (0, 1))
+        enemyColor = 'b'if self.whiteToMove else 'w'
+        for d in directions:
+            for i in range(1, len(self.board)+1):
+                endRow = r + d[0] * i
+                endCol = c + d[1] * i
 
-    def getRookMoves(self, row, col, moves):
-        pass
+                if 0 <= endRow < len(self.board) and 0 <= endCol < len(self.board):
+                    endPiece = self.board[endRow][endCol]
+                    if endPiece == '--':
+                        moves.append(Move((r, c), (endRow, endCol), self.board))
+                    else: # other piece
+                        break
+                else: # off board
+                    break
 
-    def getKingMoves(self, row, col, moves):
-        self.getRookMoves(row, col, moves)
-
-
-
-
-
-
-
-
+    def printBoard(self):
+        string = ""
+        for i in range(len(self.board)):
+            for j in range(len(self.board[i])):
+                string += self.board[i][j] + "  "
+            print(string + "\n")
+            string= ""
 
 
 class Move():
@@ -127,6 +137,7 @@ class Move():
         self.pieceCaptured = board[self.endRow][self.endCol]
         self.ID = self.getChessNotation()
 
+
     def __eq__(self, other): # overriding ==
         if isinstance(other, Move):
             return self.ID == other.ID
@@ -146,6 +157,7 @@ board_B = "{:064b}".format(0)
 board=(board_A, board_B)
 def print_board(board):
     print('\n'.join([' '.join(textwrap.wrap(line, 1)) for line in textwrap.wrap(board[0], 11)]))
+
 
 if __name__ == "__main__":
     print_board(board)

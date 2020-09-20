@@ -4,7 +4,7 @@ import game_engine
 
 
 IMGS_PATH = "images"
-WINDOW_LAYOUT = (80, 80)
+WINDOW_LAYOUT = (550, 80)
 WINDOW_WIDTH = WINDOW_HEIGHT = 720
 BOARD_WIDTH = BOARD_HEIGHT = 660
 DIMENSION = 11
@@ -28,18 +28,18 @@ def main():
         label = font.render(str(text), True, pygame.Color("white"))
         layout_X = 0.5*(SQ_SIZE - label.get_rect().width)
         layout_Y = 0.5*(SQ_SIZE - label.get_rect().height) + 3
-        screen.blit(label, (pos_X + layout_X, pos_Y + layout_Y))
+        screen.blit(label, (int(pos_X + layout_X), int(pos_Y + layout_Y)))
         #print(str(text) + " - " + str(label.get_rect().height) + " - " + str(pos_Y + layout_X))
 
-    index_map = {0: "K", 1: "J", 2: "I", 3: "H", 4: "G", 5: "F", 6: "E", 7: "D", 8: "C", 9: "B", 10: "A"}
-    for ind, abc in index_map.items():
-        write_index(abc, 44, BOARD_WIDTH, ind*SQ_SIZE)
-        write_index(ind+1, 44, ind * SQ_SIZE, BOARD_HEIGHT)
+    index_map = {"A": 0, "B": 1, "C": 2, "D": 3, "E": 4, "F": 5, "G": 6, "H": 7, "I": 8, "J": 9, "K": 10}
+    for abc, ind in index_map.items():
+        write_index(ind+1, 44, BOARD_WIDTH, (10-ind)*SQ_SIZE)
+        write_index(abc, 44, ind * SQ_SIZE, BOARD_HEIGHT)
 
     clock = pygame.time.Clock()
 
     game = game_engine.GameState()
-    validMoves = game.getValidMoves()
+    validMoves = game.getAllPossibleMoves()
     moveMade = False
     loadImages()
     running = True
@@ -47,9 +47,7 @@ def main():
     playerClicks = []
 
     while running:
-
         for event in pygame.event.get():
-
             # MOUSE COMMANDS
             if event.type == pygame.QUIT:
                 running = False
@@ -59,7 +57,7 @@ def main():
                 if 0 <= location[0] < BOARD_WIDTH and 0 <= location[1] < BOARD_HEIGHT:
                     row = location[1] // SQ_SIZE
                     col = location[0] // SQ_SIZE
-
+                    #print((row, col))
                     if sqSelected != (row, col) and (game.isValidPiece(row, col) or len(playerClicks) > 0):
                         sqSelected = (row, col)
                         playerClicks.append(sqSelected)
@@ -69,8 +67,16 @@ def main():
 
                     if len(playerClicks) == 2:
                         move = game_engine.Move(playerClicks[0], playerClicks[1], game.board)
-                        if move in validMoves:
-                            game.makeMove(move)
+                        asd = True
+                        for check_move in validMoves:
+                            if move == check_move:
+                                game.makeMove(move)
+                            else:
+                                print(move.ID + " - " + check_move.ID)
+
+
+
+
                         sqSelected = ()
                         playerClicks = []
                         moveMade = True
@@ -90,7 +96,7 @@ def main():
                     moveMade = True
 
         if moveMade:
-            validMoves = game.getValidMoves()
+            validMoves = game.getAllPossibleMoves()
             moveMade = False
 
         drawBoard(screen)
