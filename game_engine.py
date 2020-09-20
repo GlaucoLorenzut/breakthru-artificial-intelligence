@@ -7,31 +7,31 @@ class GameState():
     def __init__(self):
         self.board = [
             ["--", "--", "--", "--", "--", "--", "--", "--", "--", "--", "--"],
-            ["--", "--", "--", "bR", "bR", "bR", "bR", "bR", "--", "--", "--"],
+            ["--", "--", "--", "sS", "sS", "sS", "sS", "sS", "--", "--", "--"],
             ["--", "--", "--", "--", "--", "--", "--", "--", "--", "--", "--"],
-            ["--", "bR", "--", "--", "wR", "wR", "wR", "--", "--", "bR", "--"],
-            ["--", "bR", "--", "wR", "--", "--", "--", "wR", "--", "bR", "--"],
-            ["--", "bR", "--", "wR", "--", "wK", "--", "wR", "--", "bR", "--"],
-            ["--", "bR", "--", "wR", "--", "--", "--", "wR", "--", "bR", "--"],
-            ["--", "bR", "--", "--", "wR", "wR", "wR", "--", "--", "bR", "--"],
+            ["--", "sS", "--", "--", "gS", "gS", "gS", "--", "--", "sS", "--"],
+            ["--", "sS", "--", "gS", "--", "--", "--", "gS", "--", "sS", "--"],
+            ["--", "sS", "--", "gS", "--", "gF", "--", "gS", "--", "sS", "--"],
+            ["--", "sS", "--", "gS", "--", "--", "--", "gS", "--", "sS", "--"],
+            ["--", "sS", "--", "--", "gS", "gS", "gS", "--", "--", "sS", "--"],
             ["--", "--", "--", "--", "--", "--", "--", "--", "--", "--", "--"],
-            ["--", "--", "--", "bR", "bR", "bR", "bR", "bR", "--", "--", "--"],
+            ["--", "--", "--", "sS", "sS", "sS", "sS", "sS", "--", "--", "--"],
             ["--", "--", "--", "--", "--", "--", "--", "--", "--", "--", "--"]
         ]
-        self.whiteToMove = True
+        self.gold_turn = True
         self.gameLog = []
         self.restoreLog = []
 
 
-    def isValidPiece(self, row, col):
-        if self.board[row][col] == "--":
+    def isValidPiece(self, r, c):
+        if self.board[r][c] == "--":
             return False
         else:
             return True
 
     def isYourTurn(self, r, c):
         turn = self.board[r][c][0]
-        if (turn == 'w' and self.whiteToMove) or (turn == 'b' and not self.whiteToMove):
+        if (turn == 'g' and self.gold_turn) or (turn == 's' and not self.gold_turn):
             return True
         return False
 
@@ -40,11 +40,11 @@ class GameState():
         self.board[move.startRow][move.startCol] = "--"
         self.board[move.endRow][move.endCol] = move.pieceMoved
         self.gameLog.append(move)
-        self.whiteToMove = not self.whiteToMove
+        self.gold_turn = not self.gold_turn #TODO
 
         self.restoreLog = []
         print("move: " + move.ID)
-        self.printBoard()
+        #self.printBoard()
 
 
     def undoMove(self):
@@ -52,7 +52,7 @@ class GameState():
             last_move = self.gameLog.pop()  # take and remove in one passage
             self.board[last_move.startRow][last_move.startCol] = last_move.pieceMoved
             self.board[last_move.endRow][last_move.endCol] = last_move.pieceCaptured
-            self.whiteToMove = not self.whiteToMove
+            self.gold_turn = not self.gold_turn
 
             self.restoreLog.append(last_move)
             print("undo: " + last_move.ID)
@@ -64,26 +64,26 @@ class GameState():
 
             self.board[restore_move.startRow][restore_move.startCol] = "--"
             self.board[restore_move.endRow][restore_move.endCol] = restore_move.pieceMoved
-            self.whiteToMove = not self.whiteToMove
+            self.gold_turn = not self.gold_turn
             self.gameLog.append(restore_move)
             print("restore: " + restore_move.ID)
 
 
     def getAllPossibleMoves(self):
-        print("start")
+        #print("start")
         moves = []
         for r in range(len(self.board)):  # number of rows
             for c in range(len(self.board[r])):
                 turn = self.board[r][c][0]
-                if (turn == 'w' and self.whiteToMove) or (turn == 'b' and not self.whiteToMove): #TODO chec
+                if (turn == 'g' and self.gold_turn) or (turn == 's' and not self.gold_turn): #TODO chec
                     self.getPieceMoves(r, c, moves)
-        print("end\n")
+        #print("end\n")
         return moves
 
 
     def getPieceMoves(self, r, c, moves):
         directions = ((1, 0), (-1, 0), (0, 1), (0, -1))
-        enemyColor = 'b'if self.whiteToMove else 'w'
+        enemyColor = 's'if self.gold_turn else 'g'
         for d in directions:
             for i in range(1, len(self.board)+1):
                 endRow = r + d[0] * i
@@ -113,18 +113,18 @@ class GameState():
 
         # vertical check
         for i in range(len(self.board)):
-            if self.board[i][0] == "wK" or self.board[i][len(self.board)-1] == "wK":
+            if self.board[i][0] == "gF" or self.board[i][len(self.board)-1] == "gF":
                 flagship_escaped = True
 
         # horizontal check
         for j in range(len(self.board[0])):
-            if self.board[0][j] == "wK" or self.board[len(self.board[0])-1][j] == "wK":
+            if self.board[0][j] == "gF" or self.board[len(self.board[0])-1][j] == "gF":
                 flagship_escaped = True
 
         # kill check
         for i in range(len(self.board)):
             for j in range(len(self.board[i])):
-                if self.board[i][j] == "wK":
+                if self.board[i][j] == "gF":
                     flagship_killed = False
 
         if flagship_escaped:
@@ -139,7 +139,7 @@ class GameState():
             for j in range(len(self.board[i])):
                 string += self.board[i][j] + "  "
             print(string + "\n")
-            string= ""
+            string = ""
 
 
 class Move():
@@ -176,6 +176,7 @@ class Move():
         self.endCol = endSq[1]
         self.pieceMoved = board[self.startRow][self.startCol]
         self.pieceCaptured = board[self.endRow][self.endCol]
+        self.cost = 2 if (self.pieceCaptured != "--" or self.pieceMoved == "wK") else 1
         self.ID = self.getChessNotation()
 
 

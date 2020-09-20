@@ -119,7 +119,7 @@ def main():
 
 
 def loadImages():
-    pieces = ["bR", "wR", "wK"]
+    pieces = ["sS", "gS", "gF"]
     for piece in pieces:
         IMAGES[piece] = pygame.transform.scale(pygame.image.load(IMGS_PATH + "/" + piece + ".png"), (SQ_SIZE, SQ_SIZE))
 
