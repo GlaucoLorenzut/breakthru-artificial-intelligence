@@ -96,13 +96,21 @@ def main():
                     moveMade = True
 
         if moveMade:
-            validMoves = game.getAllPossibleMoves()
-            moveMade = False
+            status = game.checkVictory()
+            if status != "":
+                print(status)
+                running = False
+            else:
+                validMoves = game.getAllPossibleMoves()
+                moveMade = False
 
         drawBoard(screen)
 
         if len(playerClicks) > 0:
-            highlightSquare(screen, playerClicks[0][0], playerClicks[0][1])
+            if game.isYourTurn(playerClicks[0][0], playerClicks[0][1]):
+                highlightSquare(screen, playerClicks[0][0], playerClicks[0][1], pygame.Color(50, 170, 80))
+            else:
+                highlightSquare(screen, playerClicks[0][0], playerClicks[0][1], pygame.Color(170, 50, 80))
 
         drawPieces(screen, game.board)
 
@@ -116,8 +124,8 @@ def loadImages():
         IMAGES[piece] = pygame.transform.scale(pygame.image.load(IMGS_PATH + "/" + piece + ".png"), (SQ_SIZE, SQ_SIZE))
 
 
-def highlightSquare(screen, row, col):
-    pygame.draw.rect(screen, pygame.Color(50, 170, 80), pygame.Rect(col * SQ_SIZE+1,  row* SQ_SIZE+1, SQ_SIZE-1, SQ_SIZE-1))
+def highlightSquare(screen, row, col, color):
+    pygame.draw.rect(screen, color, pygame.Rect(col * SQ_SIZE+1,  row* SQ_SIZE+1, SQ_SIZE-1, SQ_SIZE-1))
 
 
 def drawBoard(screen):

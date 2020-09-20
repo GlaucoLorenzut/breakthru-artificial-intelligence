@@ -29,6 +29,12 @@ class GameState():
         else:
             return True
 
+    def isYourTurn(self, r, c):
+        turn = self.board[r][c][0]
+        if (turn == 'w' and self.whiteToMove) or (turn == 'b' and not self.whiteToMove):
+            return True
+        return False
+
 
     def makeMove(self, move):
         self.board[move.startRow][move.startCol] = "--"
@@ -76,7 +82,7 @@ class GameState():
 
 
     def getPieceMoves(self, r, c, moves):
-        directions = ((-1, 0), (0, -1), (1, 0), (0, 1))
+        directions = ((1, 0), (-1, 0), (0, 1), (0, -1))
         enemyColor = 'b'if self.whiteToMove else 'w'
         for d in directions:
             for i in range(1, len(self.board)+1):
@@ -91,6 +97,41 @@ class GameState():
                         break
                 else: # off board
                     break
+        directions = ((1, 1), (-1, 1), (1, -1), (-1, -1))
+
+        for d in directions:
+            endRow = r + d[0]
+            endCol = c + d[1]
+            if 0 <= endRow < len(self.board) and 0 <= endCol < len(self.board):
+                endPiece = self.board[endRow][endCol][0]
+                if endPiece == enemyColor:
+                    moves.append(Move((r, c), (endRow, endCol), self.board))
+
+    def checkVictory(self):
+        flagship_escaped = False
+        flagship_killed = True
+
+        # vertical check
+        for i in range(len(self.board)):
+            if self.board[i][0] == "wK" or self.board[i][len(self.board)-1] == "wK":
+                flagship_escaped = True
+
+        # horizontal check
+        for j in range(len(self.board[0])):
+            if self.board[0][j] == "wK" or self.board[len(self.board[0])-1][j] == "wK":
+                flagship_escaped = True
+
+        # kill check
+        for i in range(len(self.board)):
+            for j in range(len(self.board[i])):
+                if self.board[i][j] == "wK":
+                    flagship_killed = False
+
+        if flagship_escaped:
+            return "GOLD_WIN"
+        if flagship_killed:
+            return "SILVER_WIN"
+        return ""
 
     def printBoard(self):
         string = ""
