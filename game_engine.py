@@ -8,10 +8,10 @@ class GameState():
         self.board = [
             ["--", "--", "--", "--", "--", "--", "--", "--", "--", "--", "--"],
             ["--", "--", "--", "sS", "sS", "sS", "sS", "sS", "--", "--", "--"],
-            ["--", "--", "--", "--", "--", "--", "--", "--", "--", "--", "--"],
+            ["--", "--", "gF", "--", "--", "--", "--", "--", "--", "--", "--"],
             ["--", "sS", "--", "--", "gS", "gS", "gS", "--", "--", "sS", "--"],
             ["--", "sS", "--", "gS", "--", "--", "--", "gS", "--", "sS", "--"],
-            ["--", "sS", "--", "gS", "--", "gF", "--", "gS", "--", "sS", "--"],
+            ["--", "sS", "--", "gS", "--", "--", "--", "gS", "--", "sS", "--"],
             ["--", "sS", "--", "gS", "--", "--", "--", "gS", "--", "sS", "--"],
             ["--", "sS", "--", "--", "gS", "gS", "gS", "--", "--", "sS", "--"],
             ["--", "--", "--", "--", "--", "--", "--", "--", "--", "--", "--"],
@@ -29,7 +29,7 @@ class GameState():
         else:
             return True
 
-    def isYourTurn(self, r, c):
+    def is_correct_turn(self, r, c):
         turn = self.board[r][c][0]
         if (turn == 'g' and self.gold_turn) or (turn == 's' and not self.gold_turn):
             return True
@@ -106,6 +106,18 @@ class GameState():
                 endPiece = self.board[endRow][endCol][0]
                 if endPiece == enemyColor:
                     moves.append(Move((r, c), (endRow, endCol), self.board))
+
+
+    def check_single_piece_moves(self, r, c, all_valid_moves):
+        move_list, capture_list = [], []
+        for move in all_valid_moves:
+            if move.startRow == r and move.startCol == c:
+                if move.pieceCaptured != "--":
+                    capture_list.append(move)
+                else:
+                    move_list.append(move)
+        return move_list, capture_list
+
 
     def checkVictory(self):
         flagship_escaped = False

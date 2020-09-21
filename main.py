@@ -37,6 +37,7 @@ def main():
     running = True
     sqSelected = ()
     playerClicks = []
+    status_of_game = ""
 
     while running:
         for event in pygame.event.get():
@@ -82,9 +83,9 @@ def main():
                     moveMade = True
 
         if moveMade:
-            status = game.checkVictory()
-            if status != "":
-                print(status)
+            status_of_game = game.checkVictory()
+            if status_of_game != "":
+
                 running = False
             else:
                 validMoves = game.getAllPossibleMoves()
@@ -93,16 +94,31 @@ def main():
         gui.draw_board()
 
         if len(playerClicks) > 0:
-            if game.isYourTurn(playerClicks[0][0], playerClicks[0][1]):
-                gui.highlightSquare(playerClicks[0][0], playerClicks[0][1], pygame.Color(50, 170, 80))
+            p_row, p_col = playerClicks[0][0], playerClicks[0][1]
+            if game.is_correct_turn(p_row, p_col):
+                gui.highlight_square(p_row, p_col, pygame.Color(50, 170, 80))
+                move_list, capture_list = game.check_single_piece_moves(p_row, p_col, validMoves)
+                for move in move_list:
+                    gui.highlight_square(move.endRow, move.endCol, pygame.Color(50, 170, 80))
+                for move in capture_list:
+                    gui.highlight_square(move.endRow, move.endCol, pygame.Color(210, 170, 80))
             else:
-                gui.highlightSquare(playerClicks[0][0], playerClicks[0][1], pygame.Color(170, 50, 80))
+                gui.highlight_square(p_row, p_col, pygame.Color(170, 50, 80))
 
         gui.draw_pieces(game.board)
 
         clock.tick(MAX_FPS)
         pygame.display.flip()
 
+    running = True
+    while running:
+        for event in pygame.event.get():
+            # MOUSE COMMANDS
+            if event.type == pygame.QUIT:
+                running = False
+        gui.draw_game_result(status_of_game)
+        clock.tick(MAX_FPS)
+        pygame.display.flip()
 
 if __name__ == "__main__":
     main()
