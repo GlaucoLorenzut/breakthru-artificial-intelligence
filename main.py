@@ -2,9 +2,12 @@ import os
 import pygame
 import game_engine
 import game_gui
+import janitor as jnt
+from pathlib import Path
 
 
 IMGS_PATH = "images"
+SAVING_PATH = "saves"
 DIMENSION = 11
 MAX_FPS = 15
 WINDOW_LAYOUT = (500, 80)
@@ -34,8 +37,15 @@ class Breakthru():
     def open_menu_action(self):
         self.state = "MENU"
 
+    def save_game_action(self):
+        jnt.pickle_save(self.game, Path(SAVING_PATH) / "save.pickle")
+
+    def load_game_action(self):
+        self.game = jnt.pickle_load(Path(SAVING_PATH) / "save.pickle")
+
 
     def init_game(self):
+        jnt.create_dir(SAVING_PATH)
         os.environ['SDL_VIDEO_WINDOW_POS'] = "%d,%d" % WINDOW_LAYOUT
         self.screen = pygame.display.set_mode((WINDOW_WIDTH, WINDOW_HEIGHT))
         pygame.display.set_caption("  Breakthru")
@@ -70,18 +80,10 @@ class Breakthru():
                                                BUTTON_TEXT_SIZE,
                                                "Multi Player")
 
-        button_load_game = game_gui.Button(self.screen,
-                                               panel_dx_layout[0] + 50,
-                                               panel_dx_layout[1] + 2*BUTTON_SIZE[1] + 100,
-                                               BUTTON_SIZE,
-                                               pygame.Color("gray"),
-                                               BUTTON_TEXT_SIZE,
-                                               "Load Game")
 
         while self.state == "MENU":
             button_single_player.draw()
             button_multi_player.draw()
-            button_load_game.draw()
 
             for event in pygame.event.get():
                 # MOUSE COMMANDS
@@ -92,7 +94,6 @@ class Breakthru():
 
                     button_single_player.check(mouse_pos, self.init_game_action)
                     button_multi_player.check(mouse_pos, self.init_game_action)
-                    button_load_game.check(mouse_pos, self.init_game_action)
 
             self.game_gui.draw_game_result(self.state)
 
@@ -132,10 +133,19 @@ class Breakthru():
                                                BUTTON_TEXT_SIZE,
                                                "Save Game")
 
+        button_load_game = game_gui.Button(self.screen,
+                                               panel_dx_layout[0] + 50,
+                                               panel_dx_layout[1] + 2*BUTTON_SIZE[1] + 100,
+                                               BUTTON_SIZE,
+                                               pygame.Color("gray"),
+                                               BUTTON_TEXT_SIZE,
+                                               "Load Game")
+
 
         while self.state == "GAME":
             button_quit_game.draw()
             button_save_game.draw()
+            button_load_game.draw()
 
             for event in pygame.event.get():
                 # MOUSE COMMANDS
@@ -147,7 +157,8 @@ class Breakthru():
                     location = self.game_gui.get_board_location(mouse_pos)
 
                     button_quit_game.check(mouse_pos, self.open_menu_action)
-                    button_save_game.check(mouse_pos, self.open_menu_action)
+                    button_save_game.check(mouse_pos, self.save_game_action)
+                    button_load_game.check(mouse_pos, self.load_game_action)
 
                     if location:
                         row, col = location
