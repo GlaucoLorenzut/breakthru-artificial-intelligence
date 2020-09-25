@@ -70,14 +70,12 @@ class GameState():
 
 
     def getAllPossibleMoves(self):
-        #print("start")
         moves = []
         for r in range(len(self.board)):  # number of rows
             for c in range(len(self.board[r])):
                 turn = self.board[r][c][0]
                 if (turn == 'g' and self.gold_turn) or (turn == 's' and not self.gold_turn): #TODO chec
                     self.getPieceMoves(r, c, moves)
-        #print("end\n")
         return moves
 
 

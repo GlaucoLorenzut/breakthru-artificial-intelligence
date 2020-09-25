@@ -165,26 +165,3 @@ class Button():
                 return action()
             return True
         return False
-
-
-
-def text_button(self, event, text, text_size, pos_x, pos_y, width, height, color, action_color, action=None):
-
-    return
-
-    if pos_x + width > mouse[0] > pos_x and pos_y + height > mouse[1] > pos_y:
-        pygame.draw.rect(self.screen, action_color, (pos_x, pos_y, width, height))
-        if event == pygame.MOUSEBUTTONDOWN and action != None:
-            pygame.draw.rect(self.screen, pygame.Color("white"), (pos_x, pos_y, width, height))
-            return action()
-    else:
-        pygame.draw.rect(self.screen, color, (pos_x, pos_y, width, height))
-
-    def text_objects(text, font):
-        textSurface = font.render(text, True, pygame.Color("black"))
-        return textSurface, textSurface.get_rect()
-
-    smallText = pygame.font.Font("freesansbold.ttf", text_size)
-    textSurf, textRect = text_objects(text, smallText)
-    textRect.center = ((pos_x + (width / 2)), (pos_y + (height / 2)))
-    self.screen.blit(textSurf, textRect)
