@@ -1,26 +1,38 @@
 import os
 import pygame
 import game_engine
-import game_GUI
+import game_gui
 
 
 IMGS_PATH = "images"
+DIMENSION = 11
+MAX_FPS = 15
 WINDOW_LAYOUT = (500, 80)
 WINDOW_WIDTH = 1040
 WINDOW_HEIGHT = 720
 BOARD_SIZE = 616
-DIMENSION = 11
-MAX_FPS = 15
+BUTTON_SIZE = (200, 50)
+BUTTON_TEXT_SIZE = 24
 
 
 class Breakthru():
 
     def __init__(self):
-        self.state = "HOME"
+        self.state = "MENU"
         self.screen = None
         self.clock = None
         self.game_gui = None
         self.game = None
+
+    def quit_action(self):
+        pygame.quit()
+        quit()
+
+    def init_game_action(self):
+        self.state = "GAME"
+
+    def open_menu_action(self):
+        self.state = "MENU"
 
 
     def init_game(self):
@@ -29,6 +41,7 @@ class Breakthru():
         pygame.display.set_caption("  Breakthru")
         self.clock = pygame.time.Clock()
         self.screen.fill(pygame.Color("black"))
+        self.game_gui = game_gui.GameGUI(self.screen, BOARD_SIZE, DIMENSION)
 
 
 
@@ -36,40 +49,58 @@ class Breakthru():
         pygame.font.init()
 
 
-    def home_screen(self):
+    def menu_screen(self):
         self.screen.fill(pygame.Color("black"))
-        self.game_gui = game_GUI.GameGUI(self.screen, BOARD_SIZE, DIMENSION)
 
-        while self.state == "HOME":
+        panel_dx_layout = (self.game_gui.board_size + 2 * self.game_gui.board_layout, self.game_gui.board_layout)
+
+        button_single_player = game_gui.Button(self.screen,
+                                               panel_dx_layout[0] + 50,
+                                               panel_dx_layout[1],
+                                               BUTTON_SIZE,
+                                               pygame.Color("gray"),
+                                               BUTTON_TEXT_SIZE,
+                                               "Single Player")
+
+        button_multi_player = game_gui.Button(self.screen,
+                                               panel_dx_layout[0] + 50,
+                                               panel_dx_layout[1] + BUTTON_SIZE[1] + 50,
+                                               BUTTON_SIZE,
+                                               pygame.Color("gray"),
+                                               BUTTON_TEXT_SIZE,
+                                               "Multi Player")
+
+        button_load_game = game_gui.Button(self.screen,
+                                               panel_dx_layout[0] + 50,
+                                               panel_dx_layout[1] + 2*BUTTON_SIZE[1] + 100,
+                                               BUTTON_SIZE,
+                                               pygame.Color("gray"),
+                                               BUTTON_TEXT_SIZE,
+                                               "Load Game")
+
+        while self.state == "MENU":
+            button_single_player.draw()
+            button_multi_player.draw()
+            button_load_game.draw()
 
             for event in pygame.event.get():
                 # MOUSE COMMANDS
                 if event.type == pygame.QUIT:
                     self.quit_action()
+                elif event.type == pygame.MOUSEBUTTONDOWN:
+                    mouse_pos = pygame.mouse.get_pos()
 
-            self.game_gui.text_button("Single Player", 250, 400, 200, 45, pygame.Color("gray"), pygame.Color("blue"), self.init_game_action)
-            self.game_gui.text_button("Multi Player", 550, 400, 200, 45, pygame.Color("gray"), pygame.Color("blue"), self.quit_action)
+                    button_single_player.check(mouse_pos, self.init_game_action)
+                    button_multi_player.check(mouse_pos, self.init_game_action)
+                    button_load_game.check(mouse_pos, self.init_game_action)
 
-            self.clock.tick(MAX_FPS)
-            pygame.display.update()
-
-
-    def switch_screen(self):
-        self.screen.fill(pygame.Color("black"))
-        self.game_gui = game_GUI.GameGUI(self.screen, BOARD_SIZE, DIMENSION)
-
-        while bkt.state == "SWITCH" or bkt.state == "GOLD_WIN" or bkt.state == "SILVER_WIN" or bkt.state == "DRAW":
-            for event in pygame.event.get():
-                # MOUSE COMMANDS
-                if event.type == pygame.QUIT:
-                    self.quit_action()
             self.game_gui.draw_game_result(self.state)
+
             self.clock.tick(MAX_FPS)
             pygame.display.update()
 
 
     def game_screen(self):
-        self.game_gui = game_GUI.GameGUI(self.screen, BOARD_SIZE, DIMENSION)
         self.screen.fill(pygame.Color("black"))
 
         self.game = game_engine.GameState()
@@ -83,14 +114,40 @@ class Breakthru():
         sqSelected = ()
         playerClicks = []
 
+        panel_dx_layout = (self.game_gui.board_size + 2 * self.game_gui.board_layout, self.game_gui.board_layout)
+
+        button_quit_game = game_gui.Button(self.screen,
+                                               panel_dx_layout[0] + 50,
+                                               panel_dx_layout[1],
+                                               BUTTON_SIZE,
+                                               pygame.Color("gray"),
+                                               BUTTON_TEXT_SIZE,
+                                               "Quit Game")
+
+        button_save_game = game_gui.Button(self.screen,
+                                               panel_dx_layout[0] + 50,
+                                               panel_dx_layout[1] + BUTTON_SIZE[1] + 50,
+                                               BUTTON_SIZE,
+                                               pygame.Color("gray"),
+                                               BUTTON_TEXT_SIZE,
+                                               "Save Game")
+
+
         while self.state == "GAME":
+            button_quit_game.draw()
+            button_save_game.draw()
+
             for event in pygame.event.get():
                 # MOUSE COMMANDS
                 if event.type == pygame.QUIT:
                     pygame.quit()
                     quit()
                 elif event.type == pygame.MOUSEBUTTONDOWN:
-                    location = self.game_gui.get_board_location(pygame.mouse.get_pos())
+                    mouse_pos = pygame.mouse.get_pos()
+                    location = self.game_gui.get_board_location(mouse_pos)
+
+                    button_quit_game.check(mouse_pos, self.open_menu_action)
+                    button_save_game.check(mouse_pos, self.open_menu_action)
 
                     if location:
                         row, col = location
@@ -128,10 +185,8 @@ class Breakthru():
                         moveMade = True
 
             if moveMade:
-                status_of_game = self.game.checkVictory()
-                if status_of_game != "":
-                    self.state = status_of_game
-                else:
+                self.state = self.game.checkVictory()
+                if self.state == "GAME":
                     validMoves = self.game.getAllPossibleMoves()
                     moveMade = False
 
@@ -155,27 +210,15 @@ class Breakthru():
             pygame.display.update()
 
 
-    def quit_action(self):
-        pygame.quit()
-        quit()
-
-    def init_game_action(self):
-        self.state = "GAME"
-
-    def switch_game_action(self):
-        self.state = "SWITCH"
-
 if __name__ == "__main__":
     bkt = Breakthru()
     bkt.init_game()
 
     while True:
-        if bkt.state == "HOME":
-            bkt.home_screen()
+        if bkt.state == "MENU" or bkt.state == "GOLD_WIN" or bkt.state == "SILVER_WIN" or bkt.state == "DRAW":
+            bkt.menu_screen()
         elif bkt.state == "GAME":
             bkt.game_screen()
-        elif bkt.state == "SWITCH" or bkt.state == "GOLD_WIN" or bkt.state == "SILVER_WIN" or bkt.state == "DRAW":
-            bkt.switch_screen()
         else:
             bkt.screen.fill(pygame.Color("black"))
             print("ERROR")

@@ -11,34 +11,34 @@ class GameGUI():
 
     def init_board_index(self):
         index_map = {"A": 0, "B": 1, "C": 2, "D": 3, "E": 4, "F": 5, "G": 6, "H": 7, "I": 8, "J": 9, "K": 10}
-        text_size = 44
+        text_size = 30
 
         for abc, ind in index_map.items():
 
             self.text_rect(
                 ind + 1,
-                44,
+                text_size,
                 (0, self.board_layout + (10 - ind) * self.square_size),
                 (self.square_size, self.square_size),
             )
 
             self.text_rect(
                 ind + 1,
-                44,
+                text_size,
                 (self.board_layout + self.board_size, self.board_layout + (10 - ind) * self.square_size),
                 (self.square_size, self.square_size),
             )
 
             self.text_rect(
                 abc,
-                44,
+                text_size,
                 (self.board_layout + ind * self.square_size, 0),
                 (self.square_size, self.square_size),
             )
 
             self.text_rect(
                 abc,
-                44,
+                text_size,
                 (self.board_layout + ind * self.square_size, self.board_layout + self.board_size),
                 (self.square_size, self.square_size),
             )
@@ -49,7 +49,7 @@ class GameGUI():
         if color:
             pygame.draw.rect(self.screen, color, pygame.Rect(position[0], position[1], size[0], size[1]))
 
-        font = pygame.font.Font(None, text_size)
+        font = pygame.font.Font("freesansbold.ttf", text_size)
         label = font.render(str(text), True, text_color)
         layout_X = int(position[0] + 0.5 * (size[0] - label.get_rect().width))
         layout_Y = int(position[1] + 0.5 * (size[1] - label.get_rect().height))
@@ -122,7 +122,7 @@ class GameGUI():
 
         self.text_rect(
             text,
-            80,
+            50,
             (self.board_layout, self.board_layout),
             (self.board_size + 1, self.board_size + 1),
             text_color,
@@ -130,23 +130,61 @@ class GameGUI():
         )
 
 
-    def text_button(self, text, pos_x, pos_y, width, height, color, action_color, action=None):
-        mouse = pygame.mouse.get_pos()
-        click = pygame.mouse.get_pressed()
 
-        if pos_x + width > mouse[0] > pos_x and pos_y + height > mouse[1] > pos_y:
-            pygame.draw.rect(self.screen, action_color, (pos_x, pos_y, width, height))
-            if click[0] == 1 and action != None:
-                pygame.draw.rect(self.screen, pygame.Color("white"), (pos_x, pos_y, width, height))
-                action()
-        else:
-            pygame.draw.rect(self.screen, color, (pos_x, pos_y, width, height))
+class Button():
 
-        def text_objects(text, font):
-            textSurface = font.render(text, True, pygame.Color("black"))
-            return textSurface, textSurface.get_rect()
+    def __init__(self, screen, x, y, size, color, text_size, text='', outline_color=None):
+        self.screen = screen
+        self.x = x
+        self.y = y
+        self.width = size[0]
+        self.height = size[1]
+        self.color = color
+        self.text_size = text_size
+        self.text = text
+        self.outline_color = outline_color
 
-        smallText = pygame.font.Font("freesansbold.ttf", 20)
-        textSurf, textRect = text_objects(text, smallText)
-        textRect.center = ((pos_x + (width / 2)), (pos_y + (height / 2)))
-        self.screen.blit(textSurf, textRect)
+    def draw(self):
+        if self.outline_color:
+            pygame.draw.rect(self.screen, self.outline_color, (self.x - 2, self.y - 2, self.width + 4, self.height + 4), 0)
+
+        pygame.draw.rect(self.screen, self.color, (self.x, self.y, self.width, self.height), 0)
+
+        if self.text != '':
+            font = pygame.font.SysFont(None, self.text_size)
+            text = font.render(self.text, 1, (0, 0, 0))
+            self.screen.blit(
+                text,
+                (self.x + (self.width / 2 - text.get_width() / 2), self.y + (self.height / 2 - text.get_height() / 2))
+            )
+
+    def check(self, pos, action=None):
+        if self.x + self.width > pos[0] > self.x and self.y + self.height > pos[1] > self.y:
+            pygame.draw.rect(self.screen, pygame.Color("white"), (self.x, self.y, self.width, self.height))
+            if action != None:
+                return action()
+            return True
+        return False
+
+
+
+def text_button(self, event, text, text_size, pos_x, pos_y, width, height, color, action_color, action=None):
+
+    return
+
+    if pos_x + width > mouse[0] > pos_x and pos_y + height > mouse[1] > pos_y:
+        pygame.draw.rect(self.screen, action_color, (pos_x, pos_y, width, height))
+        if event == pygame.MOUSEBUTTONDOWN and action != None:
+            pygame.draw.rect(self.screen, pygame.Color("white"), (pos_x, pos_y, width, height))
+            return action()
+    else:
+        pygame.draw.rect(self.screen, color, (pos_x, pos_y, width, height))
+
+    def text_objects(text, font):
+        textSurface = font.render(text, True, pygame.Color("black"))
+        return textSurface, textSurface.get_rect()
+
+    smallText = pygame.font.Font("freesansbold.ttf", text_size)
+    textSurf, textRect = text_objects(text, smallText)
+    textRect.center = ((pos_x + (width / 2)), (pos_y + (height / 2)))
+    self.screen.blit(textSurf, textRect)

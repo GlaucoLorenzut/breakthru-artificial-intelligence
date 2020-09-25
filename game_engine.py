@@ -143,7 +143,7 @@ class GameState():
             return "GOLD_WIN"
         if flagship_killed:
             return "SILVER_WIN"
-        return ""
+        return "GAME"
 
     def printBoard(self):
         string = ""
