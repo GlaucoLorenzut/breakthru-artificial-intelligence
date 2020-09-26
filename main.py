@@ -125,7 +125,7 @@ class Breakthru():
         pieces_selected = []
         move_made = False
         #self.game.valid_moves = self.game.get_all_possible_moves()
-        self.game.update_all_possible_moves()
+        #self.game.update_all_possible_moves()
 
         while self.state == "GAME":
             button_quit_game.draw()
@@ -179,11 +179,11 @@ class Breakthru():
                         pieces_selected = []
                         move_made = True
 
-            if move_made:
+            if move_made: #TODO
                 self.state = self.game.check_victory()
                 if self.state == "GAME":
                     #self.game.valid_moves = self.game.get_all_possible_moves()
-                    self.game.update_all_possible_moves()
+                    #self.game.update_all_possible_moves()
                     move_made = False
 
             # DRAW BOARD, PATHS AND PIECES

@@ -21,7 +21,7 @@ class GameEngine():
         self.gold_turn = True
         self.game_log = []
         self.restore_log = []
-        self.valid_moves = []
+        self.valid_moves = self.get_all_possible_moves()
 
 
     def is_valid_piece(self, r, c):
@@ -42,8 +42,9 @@ class GameEngine():
         self.board[move.end_r][move.end_c] = move.piece_moved
         self.game_log.append(move)
         self.gold_turn = not self.gold_turn #TODO
-
         self.restore_log = []
+
+        self.update_all_possible_moves()
         print("move: " + move.ID)
         #self.print_board()
 
@@ -54,8 +55,9 @@ class GameEngine():
             self.board[last_move.start_r][last_move.start_c] = last_move.piece_moved
             self.board[last_move.end_r][last_move.end_c] = last_move.piece_captured
             self.gold_turn = not self.gold_turn
-
             self.restore_log.append(last_move)
+
+            self.update_all_possible_moves()
             print("undo: " + last_move.ID)
 
 
@@ -67,10 +69,12 @@ class GameEngine():
             self.board[restore_move.end_r][restore_move.end_c] = restore_move.piece_moved
             self.gold_turn = not self.gold_turn
             self.game_log.append(restore_move)
+
+            self.update_all_possible_moves()
             print("restore: " + restore_move.ID)
 
 
-    def get_all_possible_moves(self): # not used anymore
+    def get_all_possible_moves(self): # not used anymore directly
         moves = []
         for r in range(len(self.board)):  # number of rows
             for c in range(len(self.board[r])):
@@ -81,13 +85,7 @@ class GameEngine():
 
 
     def update_all_possible_moves(self):
-        moves = []
-        for r in range(len(self.board)):  # number of rows
-            for c in range(len(self.board[r])):
-                turn = self.board[r][c][0]
-                if (turn == 'g' and self.gold_turn) or (turn == 's' and not self.gold_turn): #TODO chec
-                    self.get_piece_moves(r, c, moves)
-        self.valid_moves = moves
+        self.valid_moves = self.get_all_possible_moves()
 
 
     def get_piece_moves(self, r, c, moves):
