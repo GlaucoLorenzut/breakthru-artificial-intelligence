@@ -1,7 +1,7 @@
 import textwrap
 
 
-class GameState():
+class GameEngine():
 
 
     def __init__(self):
@@ -207,6 +207,7 @@ number = 9
 board_A = "{:064b}".format(number)
 board_B = "{:064b}".format(0)
 board=(board_A, board_B)
+
 def print_board(board):
     print('\n'.join([' '.join(textwrap.wrap(line, 1)) for line in textwrap.wrap(board[0], 11)]))
 

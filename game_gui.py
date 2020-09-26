@@ -70,10 +70,6 @@ class GameGUI():
         return None
 
 
-    def highlight_square(self, row, col, color):
-        pygame.draw.rect(self.screen, color, pygame.Rect(self.board_layout + col * self.square_size + 1,  self.board_layout + row * self.square_size + 1, self.square_size-1, self.square_size-1))
-
-
     def draw_board(self):
         pygame.draw.rect(self.screen, pygame.Color("blue"), pygame.Rect(self.board_layout, self.board_layout, self.board_size, self.board_size))
 
@@ -102,6 +98,27 @@ class GameGUI():
                     self.screen.blit(self.images[piece], pygame.Rect(self.board_layout + c*self.square_size, self.board_layout + r*self.square_size, self.square_size, self.square_size))
 
 
+    def draw_highlighted_paths(self, r, c, correct_turn, move_list, capture_list):
+        if correct_turn:
+            self.highlight_square(r, c, pygame.Color(50, 170, 80))
+            for move in move_list:
+                self.highlight_square(move.endRow, move.endCol, pygame.Color(50, 170, 80))
+            for move in capture_list:
+                self.highlight_square(move.endRow, move.endCol, pygame.Color(210, 170, 80))
+        else:
+            self.highlight_square(r, c, pygame.Color(170, 50, 80))
+
+
+    def highlight_square(self, row, col, color):
+        pygame.draw.rect(self.screen,
+                         color,
+                         pygame.Rect(self.board_layout + col * self.square_size + 1,
+                                                         self.board_layout + row * self.square_size + 1,
+                                                         self.square_size - 1,
+                                                         self.square_size - 1)
+                         )
+
+
     def draw_game_result(self, result):
         color = pygame.Color("blue")
         text_color = pygame.Color("yellow")
@@ -128,7 +145,6 @@ class GameGUI():
             text_color,
             color
         )
-
 
         line_length = self.board_layout + self.board_size
         # rows
