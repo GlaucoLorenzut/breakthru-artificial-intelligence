@@ -26,6 +26,8 @@ class Breakthru():
         self.clock    =  pygame.time.Clock()
         self.game_gui =  game_gui.GameGui(self.screen, BOARD_SIZE, DIMENSION)
         self.game     = None
+        self.sq_selected = ()
+        self.pieces_selected = []
 
     ###################### BUTTON ACTIONS ######################
     def quit_action(self):
@@ -43,6 +45,18 @@ class Breakthru():
 
     def load_game_action(self):
         self.game = jnt.pickle_load(Path(SAVING_PATH) / "save.pickle")
+
+    def undo_move_action(self):
+        self.game.undo_move()
+        #self.state = self.game.check_victory()
+        self.sq_selected = ()
+        self.pieces_selected = []
+
+    def restore_move_action(self):
+        self.game.restore_move()
+        self.state = self.game.check_victory()
+        self.sq_selected = ()
+        self.pieces_selected = []
     ############################################################
 
 
@@ -117,11 +131,19 @@ class Breakthru():
 
         button_undo_move = game_gui.Button(self.screen,
                                                panel_dx_layout[0] + 50,
-                                               panel_dx_layout[1] + 2*BUTTON_SIZE[1] + 100,
+                                               panel_dx_layout[1] + 3*BUTTON_SIZE[1] + 150,
                                                BUTTON_SIZE,
                                                pygame.Color("gray"),
                                                BUTTON_TEXT_SIZE,
                                                "Undo Move")
+
+        button_restore_move = game_gui.Button(self.screen,
+                                               panel_dx_layout[0] + 50,
+                                               panel_dx_layout[1] + 4*BUTTON_SIZE[1] + 200,
+                                               BUTTON_SIZE,
+                                               pygame.Color("gray"),
+                                               BUTTON_TEXT_SIZE,
+                                               "Restore Move")
 
 
         self.game = game_engine.GameEngine()
@@ -129,8 +151,8 @@ class Breakthru():
         self.game_gui.init_board_index()
         self.game_gui.load_images(IMGS_PATH)
 
-        sq_selected = ()
-        pieces_selected = []
+        self.sq_selected = ()
+        self.pieces_selected = []
         #self.game.valid_moves = self.game.get_all_possible_moves()
         #self.game.update_all_possible_moves()
 
@@ -139,6 +161,7 @@ class Breakthru():
             button_save_game.draw()
             button_load_game.draw()
             button_undo_move.draw()
+            button_restore_move.draw()
 
             for event in pygame.event.get():
                 # MOUSE COMMANDS
@@ -150,19 +173,21 @@ class Breakthru():
                     button_quit_game.check(mouse_pos, self.open_menu_action)
                     button_save_game.check(mouse_pos, self.save_game_action)
                     button_load_game.check(mouse_pos, self.load_game_action)
+                    button_undo_move.check(mouse_pos, self.undo_move_action)
+                    button_restore_move.check(mouse_pos, self.restore_move_action)
 
                     board_location = self.game_gui.get_board_location(mouse_pos)
                     if board_location:
                         row, col = board_location
-                        if sq_selected != board_location and (self.game.is_valid_piece(row, col) or len(pieces_selected) > 0):
-                            sq_selected = board_location
-                            pieces_selected.append(sq_selected)
+                        if self.sq_selected != board_location and (self.game.is_valid_piece(row, col) or len(self.pieces_selected) > 0):
+                            self.sq_selected = board_location
+                            self.pieces_selected.append(self.sq_selected)
                         else:
-                            sq_selected = ()
-                            piece_selected = []
+                            self.sq_selected = ()
+                            self.piece_selected = []
 
-                        if len(pieces_selected) == 2:
-                            move = game_engine.Move(pieces_selected[0], pieces_selected[1], self.game.board)
+                        if len(self.pieces_selected) == 2:
+                            move = game_engine.Move(self.pieces_selected[0], self.pieces_selected[1], self.game.board)
                             for check_move in self.game.valid_moves:
                                 if move == check_move:
                                     self.game.make_move(move)
@@ -170,32 +195,14 @@ class Breakthru():
                                 #    print(move.ID + " - " + check_move.ID)
 
                             self.state = self.game.check_victory()
-                            sq_selected = ()
-                            pieces_selected = []
-
-
-                # KEYBOARD COMMANDS
-                elif event.type == pygame.KEYDOWN:
-                    if event.key == pygame.K_DOWN:
-                        self.game.undo_move()
-                        self.state = self.game.check_victory()
-                        sq_selected = ()
-                        pieces_selected = []
-
-
-                    if event.key == pygame.K_UP:
-                        self.game.restore_move()
-                        self.state = self.game.check_victory()
-                        sq_selected = ()
-                        pieces_selected = []
-
-
+                            self.sq_selected = ()
+                            self.pieces_selected = []
 
             # DRAW BOARD, PATHS AND PIECES
             self.game_gui.draw_board()
 
-            if len(pieces_selected) == 1:
-                r, c = pieces_selected[0][0], pieces_selected[0][1]
+            if len(self.pieces_selected) == 1:
+                r, c = self.pieces_selected[0][0], self.pieces_selected[0][1]
                 right_turn = self.game.is_piece_of_right_turn(r, c)
                 move_list, capture_list = self.game.check_single_piece_moves(r, c)
                 self.game_gui.draw_highlighted_paths(r, c, right_turn, move_list, capture_list)

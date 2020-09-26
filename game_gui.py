@@ -99,7 +99,7 @@ class GameGui():
 
 
     def draw_highlighted_paths(self, r, c, right_turn, move_list, capture_list):
-        if right_turn:
+        if right_turn and not (len(move_list)==0 and len(capture_list)==0):
             self.highlight_square(r, c, pygame.Color(50, 170, 80))
             for move in move_list:
                 self.highlight_square(move.end_r, move.end_c, pygame.Color(50, 170, 80))

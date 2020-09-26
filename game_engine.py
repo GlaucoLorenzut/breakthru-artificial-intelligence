@@ -19,12 +19,12 @@ class GameEngine():
             ["--", "--", "--", "--", "--", "--", "--", "--", "--", "--", "--"]
         ]
         self.gold_turn = True
-        self.game_log = []
-        self.restore_log = []
         self.move_cost = 0
         self.first_move = None
-        self.valid_moves = self.get_all_possible_moves()
 
+        self.game_log = []
+        self.restore_log = []
+        self.valid_moves = self.get_all_possible_moves()
 
 
     def is_valid_piece(self, r, c):
@@ -33,11 +33,13 @@ class GameEngine():
         else:
             return True
 
+
     def is_piece_of_right_turn(self, r, c):
         piece_color = self.board[r][c][0]
         if (piece_color == 'g' and self.gold_turn) or (piece_color == 's' and not self.gold_turn):
             return True
         return False
+
 
     def check_turn(self, move):
         print("( " + str(self.move_cost) + " + "+ str(move.cost) +" )")
@@ -50,6 +52,21 @@ class GameEngine():
             self.first_move = None
         else:
             print("ERROR: too many moves ( " + str(self.move_cost) + " + "+ str(move.cost) +" )")
+
+
+    def reset_turn(self, move):
+        return
+        print("( " + str(self.move_cost) + " + "+ str(move.cost) +" )")
+        if self.move_cost - move.cost < 2:
+            self.move_cost = self.move_cost + move.cost
+            self.first_move = move
+        elif self.move_cost + move.cost == 2:
+            self.gold_turn = not self.gold_turn
+            self.move_cost = 0
+            self.first_move = None
+        else:
+            print("ERROR: too many moves ( " + str(self.move_cost) + " + "+ str(move.cost) +" )")
+
 
     def make_move(self, move):
         self.board[move.start_r][move.start_c] = "--"
@@ -68,7 +85,7 @@ class GameEngine():
             last_move = self.game_log.pop()  # take and remove in one passage
             self.board[last_move.start_r][last_move.start_c] = last_move.piece_moved
             self.board[last_move.end_r][last_move.end_c] = last_move.piece_captured
-            #self.gold_turn = not self.gold_turn
+            self.reset_turn(last_move)
             #TODO undo move logic turn
             self.restore_log.append(last_move)
 
