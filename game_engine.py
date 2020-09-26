@@ -21,7 +21,10 @@ class GameEngine():
         self.gold_turn = True
         self.game_log = []
         self.restore_log = []
+        self.move_cost = 0
+        self.first_move = None
         self.valid_moves = self.get_all_possible_moves()
+
 
 
     def is_valid_piece(self, r, c):
@@ -30,18 +33,29 @@ class GameEngine():
         else:
             return True
 
-    def is_correct_turn(self, r, c):
-        turn = self.board[r][c][0]
-        if (turn == 'g' and self.gold_turn) or (turn == 's' and not self.gold_turn):
+    def is_piece_of_right_turn(self, r, c):
+        piece_color = self.board[r][c][0]
+        if (piece_color == 'g' and self.gold_turn) or (piece_color == 's' and not self.gold_turn):
             return True
         return False
 
+    def check_turn(self, move):
+        print("( " + str(self.move_cost) + " + "+ str(move.cost) +" )")
+        if self.move_cost + move.cost < 2:
+            self.move_cost = self.move_cost + move.cost
+            self.first_move = move
+        elif self.move_cost + move.cost == 2:
+            self.gold_turn = not self.gold_turn
+            self.move_cost = 0
+            self.first_move = None
+        else:
+            print("ERROR: too many moves ( " + str(self.move_cost) + " + "+ str(move.cost) +" )")
 
     def make_move(self, move):
         self.board[move.start_r][move.start_c] = "--"
         self.board[move.end_r][move.end_c] = move.piece_moved
         self.game_log.append(move)
-        self.gold_turn = not self.gold_turn #TODO
+        self.check_turn(move)
         self.restore_log = []
 
         self.update_all_possible_moves()
@@ -54,7 +68,8 @@ class GameEngine():
             last_move = self.game_log.pop()  # take and remove in one passage
             self.board[last_move.start_r][last_move.start_c] = last_move.piece_moved
             self.board[last_move.end_r][last_move.end_c] = last_move.piece_captured
-            self.gold_turn = not self.gold_turn
+            #self.gold_turn = not self.gold_turn
+            #TODO undo move logic turn
             self.restore_log.append(last_move)
 
             self.update_all_possible_moves()
@@ -67,7 +82,7 @@ class GameEngine():
 
             self.board[restore_move.start_r][restore_move.start_c] = "--"
             self.board[restore_move.end_r][restore_move.end_c] = restore_move.piece_moved
-            self.gold_turn = not self.gold_turn
+            self.check_turn(restore_move)
             self.game_log.append(restore_move)
 
             self.update_all_possible_moves()
@@ -76,10 +91,10 @@ class GameEngine():
 
     def get_all_possible_moves(self): # not used anymore directly
         moves = []
+
         for r in range(len(self.board)):  # number of rows
             for c in range(len(self.board[r])):
-                turn = self.board[r][c][0]
-                if (turn == 'g' and self.gold_turn) or (turn == 's' and not self.gold_turn): #TODO chec
+                if self.is_piece_of_right_turn(r, c):
                     self.get_piece_moves(r, c, moves)
         return moves
 
@@ -89,8 +104,13 @@ class GameEngine():
 
 
     def get_piece_moves(self, r, c, moves):
+        if self.first_move:
+            fm_r, fm_c = self.first_move.get_end_pos()
+            if r == fm_r and c == fm_c:
+                return
+
+        # moves
         directions = ((1, 0), (-1, 0), (0, 1), (0, -1))
-        enemyColor = 's'if self.gold_turn else 'g'
         for d in directions:
             for i in range(1, len(self.board)+1):
                 end_r = r + d[0] * i
@@ -99,23 +119,31 @@ class GameEngine():
                 if 0 <= end_r < len(self.board) and 0 <= end_c < len(self.board):
                     endPiece = self.board[end_r][end_c]
                     if endPiece == '--':
-                        moves.append(Move((r, c), (end_r, end_c), self.board))
+                        move = Move((r, c), (end_r, end_c), self.board)
+                        if self.move_cost + move.cost <= 2:
+                            moves.append(move)
                     else: # other piece
                         break
                 else: # off board
                     break
-        directions = ((1, 1), (-1, 1), (1, -1), (-1, -1))
 
+        # captures
+        if self.move_cost > 0: #optimization
+            return
+        directions = ((1, 1), (-1, 1), (1, -1), (-1, -1))
+        enemy_color = 's' if self.gold_turn else 'g'
         for d in directions:
             end_r = r + d[0]
             end_c = c + d[1]
             if 0 <= end_r < len(self.board) and 0 <= end_c < len(self.board):
                 endPiece = self.board[end_r][end_c][0]
-                if endPiece == enemyColor:
-                    moves.append(Move((r, c), (end_r, end_c), self.board))
+                if endPiece == enemy_color:
+                    move = Move((r, c), (end_r, end_c), self.board)
+                    if self.move_cost + move.cost <= 2:
+                        moves.append(move)
 
 
-    def check_single_piece_moves(self, r, c):
+    def check_single_piece_moves(self, r, c): #subset of self.valid_moves
         move_list, capture_list = [], []
         for move in self.valid_moves:
             if move.start_r == r and move.start_c == c:
@@ -195,7 +223,7 @@ class Move():
         self.end_c = end_sq[1]
         self.piece_moved = board[self.start_r][self.start_c]
         self.piece_captured = board[self.end_r][self.end_c]
-        self.cost = 2 if (self.piece_captured != "--" or self.piece_moved == "wK") else 1
+        self.cost = 2 if (self.piece_captured != "--" or self.piece_moved == "gF") else 1
         self.ID = self.get_chess_notation()
 
 
@@ -203,6 +231,14 @@ class Move():
         if isinstance(other, Move):
             return self.ID == other.ID
         return False
+
+
+    def get_start_pos(self):
+        return (self.start_r, self.start_c)
+
+
+    def get_end_pos(self):
+        return (self.end_r, self.end_c)
 
 
     def get_chess_notation(self):
@@ -213,14 +249,19 @@ class Move():
         return self.cols_to_files[col] + self.rows_to_ranks[row]
 
 
-number = 9
-board_A = "{:064b}".format(number)
-board_B = "{:064b}".format(0)
-board=(board_A, board_B)
 
-def print_board(board):
-    print('\n'.join([' '.join(textwrap.wrap(line, 1)) for line in textwrap.wrap(board[0], 11)]))
+
+
 
 
 if __name__ == "__main__":
+    number = 9
+    board_A = "{:064b}".format(number)
+    board_B = "{:064b}".format(0)
+    board = (board_A, board_B)
+
+
+    def print_board(board):
+        print('\n'.join([' '.join(textwrap.wrap(line, 1)) for line in textwrap.wrap(board[0], 11)]))
+
     print_board(board)

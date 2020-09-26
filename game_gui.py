@@ -98,8 +98,8 @@ class GameGui():
                     self.screen.blit(self.images[piece], pygame.Rect(self.board_layout + c*self.square_size, self.board_layout + r*self.square_size, self.square_size, self.square_size))
 
 
-    def draw_highlighted_paths(self, r, c, correct_turn, move_list, capture_list):
-        if correct_turn:
+    def draw_highlighted_paths(self, r, c, right_turn, move_list, capture_list):
+        if right_turn:
             self.highlight_square(r, c, pygame.Color(50, 170, 80))
             for move in move_list:
                 self.highlight_square(move.end_r, move.end_c, pygame.Color(50, 170, 80))
