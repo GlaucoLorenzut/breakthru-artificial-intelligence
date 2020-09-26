@@ -1,5 +1,10 @@
 import textwrap
 
+# logic of turn
+G_1 = 0
+G_2 = 1
+S_1 = 2
+S_2 = 3
 
 class GameEngine():
 
@@ -18,9 +23,9 @@ class GameEngine():
             ["--", "--", "--", "sS", "sS", "sS", "sS", "sS", "--", "--", "--"],
             ["--", "--", "--", "--", "--", "--", "--", "--", "--", "--", "--"]
         ]
-        self.gold_turn = True
-        self.move_cost = 0
-        self.first_move = None
+        #self.gold_turn = True
+        self.turn = G_1
+        #self.first_move = None
 
         self.game_log = []
         self.restore_log = []
@@ -34,52 +39,59 @@ class GameEngine():
             return True
 
 
+    def is_gold_turn(self):
+        return (self.turn==G_1 or self.turn==G_2)
+
+
     def is_piece_of_right_turn(self, r, c):
         piece_color = self.board[r][c][0]
-        if (piece_color == 'g' and self.gold_turn) or (piece_color == 's' and not self.gold_turn):
+        if (piece_color == 'g' and self.is_gold_turn()) or (piece_color == 's' and not self.is_gold_turn()):
             return True
         return False
 
+    #TODO
+    def update_turn(self, move):
+        #print("( " + str(self.move_cost) + " + "+ str(move.cost) +" )")
+        #print(self.turn)
+        self.turn = (self.turn + move.cost) % 4
+        #print(str(self.turn) + "\n")
+        #if self.move_cost + move.cost < 2:
+        #    self.move_cost = self.move_cost + move.cost
+        #    self.first_move = move
+        #elif self.move_cost + move.cost == 2:
+        #    self.gold_turn = not self.gold_turn
+        #    self.move_cost = 0
+        #    self.first_move = None
+        #else:
+        #    print("ERROR: too many moves ( " + str(self.move_cost) + " + "+ str(move.cost) +" )")
 
-    def check_turn(self, move):
-        print("( " + str(self.move_cost) + " + "+ str(move.cost) +" )")
-        if self.move_cost + move.cost < 2:
-            self.move_cost = self.move_cost + move.cost
-            self.first_move = move
-        elif self.move_cost + move.cost == 2:
-            self.gold_turn = not self.gold_turn
-            self.move_cost = 0
-            self.first_move = None
-        else:
-            print("ERROR: too many moves ( " + str(self.move_cost) + " + "+ str(move.cost) +" )")
-
-
+    # TODO
     def reset_turn(self, move):
-        return
-        print("( " + str(self.move_cost) + " + "+ str(move.cost) +" )")
-        if self.move_cost - move.cost < 2:
-            self.move_cost = self.move_cost + move.cost
-            self.first_move = move
-        elif self.move_cost + move.cost == 2:
-            self.gold_turn = not self.gold_turn
-            self.move_cost = 0
-            self.first_move = None
-        else:
-            print("ERROR: too many moves ( " + str(self.move_cost) + " + "+ str(move.cost) +" )")
+        self.turn = (self.turn - move.cost) % 4
+        #print("( " + str(self.move_cost) + " + "+ str(move.cost) +" )")
+        #if self.move_cost - move.cost < 2:
+        #    self.move_cost = self.move_cost + move.cost
+        #    self.first_move = move
+        #elif self.move_cost + move.cost == 2:
+        #    self.gold_turn = not self.gold_turn
+        #    self.move_cost = 0
+        #    self.first_move = None
+        #else:
+        #    print("ERROR: too many moves ( " + str(self.move_cost) + " + "+ str(move.cost) +" )")
 
 
     def make_move(self, move):
         self.board[move.start_r][move.start_c] = "--"
         self.board[move.end_r][move.end_c] = move.piece_moved
         self.game_log.append(move)
-        self.check_turn(move)
+        self.update_turn(move)
         self.restore_log = []
 
         self.update_all_possible_moves()
         print("move: " + move.ID)
         #self.print_board()
 
-
+    #TODO
     def undo_move(self):
         if len(self.game_log) > 0:
             last_move = self.game_log.pop()  # take and remove in one passage
@@ -99,7 +111,7 @@ class GameEngine():
 
             self.board[restore_move.start_r][restore_move.start_c] = "--"
             self.board[restore_move.end_r][restore_move.end_c] = restore_move.piece_moved
-            self.check_turn(restore_move)
+            self.update_turn(restore_move)
             self.game_log.append(restore_move)
 
             self.update_all_possible_moves()
@@ -121,8 +133,8 @@ class GameEngine():
 
 
     def get_piece_moves(self, r, c, moves):
-        if self.first_move:
-            fm_r, fm_c = self.first_move.get_end_pos()
+        if len(self.game_log)>0:
+            fm_r, fm_c = self.game_log[-1].get_end_pos()
             if r == fm_r and c == fm_c:
                 return
 
@@ -137,7 +149,7 @@ class GameEngine():
                     endPiece = self.board[end_r][end_c]
                     if endPiece == '--':
                         move = Move((r, c), (end_r, end_c), self.board)
-                        if self.move_cost + move.cost <= 2:
+                        if self.has_feasible_cost(move):
                             moves.append(move)
                     else: # other piece
                         break
@@ -145,10 +157,11 @@ class GameEngine():
                     break
 
         # captures
-        if self.move_cost > 0: #optimization
+        if self.turn == G_2 or self.turn == S_2: #optimization
             return
+
         directions = ((1, 1), (-1, 1), (1, -1), (-1, -1))
-        enemy_color = 's' if self.gold_turn else 'g'
+        enemy_color = 's' if self.is_gold_turn() else 'g'
         for d in directions:
             end_r = r + d[0]
             end_c = c + d[1]
@@ -156,8 +169,11 @@ class GameEngine():
                 endPiece = self.board[end_r][end_c][0]
                 if endPiece == enemy_color:
                     move = Move((r, c), (end_r, end_c), self.board)
-                    if self.move_cost + move.cost <= 2:
-                        moves.append(move)
+                    moves.append(move)
+
+
+    def has_feasible_cost(self,move):
+        return (move.cost == 1 or self.turn == G_1 or self.turn == S_1)
 
 
     def check_single_piece_moves(self, r, c): #subset of self.valid_moves
