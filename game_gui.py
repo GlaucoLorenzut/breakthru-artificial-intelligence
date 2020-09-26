@@ -130,6 +130,15 @@ class GameGUI():
         )
 
 
+        line_length = self.board_layout + self.board_size
+        # rows
+        pygame.draw.line(self.screen, pygame.Color("white"), (self.board_layout, self.board_layout), (line_length, self.board_layout), 1)
+        pygame.draw.line(self.screen, pygame.Color("white"), (self.board_layout, line_length), (line_length, line_length), 1)
+        # cols
+        pygame.draw.line(self.screen, pygame.Color("white"), (self.board_layout, self.board_layout), (self.board_layout, line_length), 1)
+        pygame.draw.line(self.screen, pygame.Color("white"), (line_length, self.board_layout), (line_length, line_length), 1)
+
+
 
 class Button():
 

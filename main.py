@@ -81,7 +81,7 @@ class Breakthru():
                                                "Multi Player")
 
 
-        while self.state == "MENU":
+        while bkt.state == "MENU" or bkt.state == "GOLD_WIN" or bkt.state == "SILVER_WIN" or bkt.state == "DRAW":
             button_single_player.draw()
             button_multi_player.draw()
 
