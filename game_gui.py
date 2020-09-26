@@ -1,6 +1,6 @@
 import pygame
 
-class GameGUI():
+class GameGui():
     def __init__(self, screen, board_size, dimension):
         self.screen = screen
         self.board_size = board_size
@@ -102,9 +102,9 @@ class GameGUI():
         if correct_turn:
             self.highlight_square(r, c, pygame.Color(50, 170, 80))
             for move in move_list:
-                self.highlight_square(move.endRow, move.endCol, pygame.Color(50, 170, 80))
+                self.highlight_square(move.end_r, move.end_c, pygame.Color(50, 170, 80))
             for move in capture_list:
-                self.highlight_square(move.endRow, move.endCol, pygame.Color(210, 170, 80))
+                self.highlight_square(move.end_r, move.end_c, pygame.Color(210, 170, 80))
         else:
             self.highlight_square(r, c, pygame.Color(170, 50, 80))
 

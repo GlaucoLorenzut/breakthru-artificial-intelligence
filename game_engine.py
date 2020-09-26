@@ -19,11 +19,12 @@ class GameEngine():
             ["--", "--", "--", "--", "--", "--", "--", "--", "--", "--", "--"]
         ]
         self.gold_turn = True
-        self.gameLog = []
-        self.restoreLog = []
+        self.game_log = []
+        self.restore_log = []
+        self.valid_moves = []
 
 
-    def isValidPiece(self, r, c):
+    def is_valid_piece(self, r, c):
         if self.board[r][c] == "--":
             return False
         else:
@@ -36,61 +37,71 @@ class GameEngine():
         return False
 
 
-    def makeMove(self, move):
-        self.board[move.startRow][move.startCol] = "--"
-        self.board[move.endRow][move.endCol] = move.pieceMoved
-        self.gameLog.append(move)
+    def make_move(self, move):
+        self.board[move.start_r][move.start_c] = "--"
+        self.board[move.end_r][move.end_c] = move.piece_moved
+        self.game_log.append(move)
         self.gold_turn = not self.gold_turn #TODO
 
-        self.restoreLog = []
+        self.restore_log = []
         print("move: " + move.ID)
-        #self.printBoard()
+        #self.print_board()
 
 
-    def undoMove(self):
-        if len(self.gameLog) > 0:
-            last_move = self.gameLog.pop()  # take and remove in one passage
-            self.board[last_move.startRow][last_move.startCol] = last_move.pieceMoved
-            self.board[last_move.endRow][last_move.endCol] = last_move.pieceCaptured
+    def undo_move(self):
+        if len(self.game_log) > 0:
+            last_move = self.game_log.pop()  # take and remove in one passage
+            self.board[last_move.start_r][last_move.start_c] = last_move.piece_moved
+            self.board[last_move.end_r][last_move.end_c] = last_move.piece_captured
             self.gold_turn = not self.gold_turn
 
-            self.restoreLog.append(last_move)
+            self.restore_log.append(last_move)
             print("undo: " + last_move.ID)
 
 
-    def restoreMove(self):
-        if len(self.restoreLog) > 0:
-            restore_move = self.restoreLog.pop()  # take and remove in one passage
+    def restore_move(self):
+        if len(self.restore_log) > 0:
+            restore_move = self.restore_log.pop()  # take and remove in one passage
 
-            self.board[restore_move.startRow][restore_move.startCol] = "--"
-            self.board[restore_move.endRow][restore_move.endCol] = restore_move.pieceMoved
+            self.board[restore_move.start_r][restore_move.start_c] = "--"
+            self.board[restore_move.end_r][restore_move.end_c] = restore_move.piece_moved
             self.gold_turn = not self.gold_turn
-            self.gameLog.append(restore_move)
+            self.game_log.append(restore_move)
             print("restore: " + restore_move.ID)
 
 
-    def getAllPossibleMoves(self):
+    def get_all_possible_moves(self): # not used anymore
         moves = []
         for r in range(len(self.board)):  # number of rows
             for c in range(len(self.board[r])):
                 turn = self.board[r][c][0]
                 if (turn == 'g' and self.gold_turn) or (turn == 's' and not self.gold_turn): #TODO chec
-                    self.getPieceMoves(r, c, moves)
+                    self.get_piece_moves(r, c, moves)
         return moves
 
 
-    def getPieceMoves(self, r, c, moves):
+    def update_all_possible_moves(self):
+        moves = []
+        for r in range(len(self.board)):  # number of rows
+            for c in range(len(self.board[r])):
+                turn = self.board[r][c][0]
+                if (turn == 'g' and self.gold_turn) or (turn == 's' and not self.gold_turn): #TODO chec
+                    self.get_piece_moves(r, c, moves)
+        self.valid_moves = moves
+
+
+    def get_piece_moves(self, r, c, moves):
         directions = ((1, 0), (-1, 0), (0, 1), (0, -1))
         enemyColor = 's'if self.gold_turn else 'g'
         for d in directions:
             for i in range(1, len(self.board)+1):
-                endRow = r + d[0] * i
-                endCol = c + d[1] * i
+                end_r = r + d[0] * i
+                end_c = c + d[1] * i
 
-                if 0 <= endRow < len(self.board) and 0 <= endCol < len(self.board):
-                    endPiece = self.board[endRow][endCol]
+                if 0 <= end_r < len(self.board) and 0 <= end_c < len(self.board):
+                    endPiece = self.board[end_r][end_c]
                     if endPiece == '--':
-                        moves.append(Move((r, c), (endRow, endCol), self.board))
+                        moves.append(Move((r, c), (end_r, end_c), self.board))
                     else: # other piece
                         break
                 else: # off board
@@ -98,26 +109,26 @@ class GameEngine():
         directions = ((1, 1), (-1, 1), (1, -1), (-1, -1))
 
         for d in directions:
-            endRow = r + d[0]
-            endCol = c + d[1]
-            if 0 <= endRow < len(self.board) and 0 <= endCol < len(self.board):
-                endPiece = self.board[endRow][endCol][0]
+            end_r = r + d[0]
+            end_c = c + d[1]
+            if 0 <= end_r < len(self.board) and 0 <= end_c < len(self.board):
+                endPiece = self.board[end_r][end_c][0]
                 if endPiece == enemyColor:
-                    moves.append(Move((r, c), (endRow, endCol), self.board))
+                    moves.append(Move((r, c), (end_r, end_c), self.board))
 
 
-    def check_single_piece_moves(self, r, c, all_valid_moves):
+    def check_single_piece_moves(self, r, c):
         move_list, capture_list = [], []
-        for move in all_valid_moves:
-            if move.startRow == r and move.startCol == c:
-                if move.pieceCaptured != "--":
+        for move in self.valid_moves:
+            if move.start_r == r and move.start_c == c:
+                if move.piece_captured != "--":
                     capture_list.append(move)
                 else:
                     move_list.append(move)
         return move_list, capture_list
 
 
-    def checkVictory(self):
+    def check_victory(self):
         flagship_escaped = False
         flagship_killed = True
 
@@ -143,7 +154,7 @@ class GameEngine():
             return "SILVER_WIN"
         return "GAME"
 
-    def printBoard(self):
+    def print_board(self):
         string = ""
         for i in range(len(self.board)):
             for j in range(len(self.board[i])):
@@ -153,7 +164,7 @@ class GameEngine():
 
 
 class Move():
-    ranksToRows = {
+    ranks_to_rows = {
         "1": 10, "2": 9,
         "3": 8, "4": 7,
         "5": 6, "6": 5,
@@ -162,11 +173,11 @@ class Move():
         "11": 0
     }
 
-    rowsToRanks = {
-        v : k for k, v in ranksToRows.items()
+    rows_to_ranks = {
+        v : k for k, v in ranks_to_rows.items()
     }
 
-    filesToCols = {
+    files_to_cols = {
         "a": 0, "b": 1,
         "c": 2, "d": 3,
         "e": 4, "f": 5,
@@ -175,19 +186,19 @@ class Move():
         "k": 10
     }
 
-    colsToFiles = {
-        v : k for k, v in filesToCols.items()
+    cols_to_files = {
+        v : k for k, v in files_to_cols.items()
     }
 
-    def __init__(self, startSq, endSq, board):
-        self.startRow = startSq[0]
-        self.startCol = startSq[1]
-        self.endRow = endSq[0]
-        self.endCol = endSq[1]
-        self.pieceMoved = board[self.startRow][self.startCol]
-        self.pieceCaptured = board[self.endRow][self.endCol]
-        self.cost = 2 if (self.pieceCaptured != "--" or self.pieceMoved == "wK") else 1
-        self.ID = self.getChessNotation()
+    def __init__(self, start_sq, end_sq, board):
+        self.start_r = start_sq[0]
+        self.start_c = start_sq[1]
+        self.end_r = end_sq[0]
+        self.end_c = end_sq[1]
+        self.piece_moved = board[self.start_r][self.start_c]
+        self.piece_captured = board[self.end_r][self.end_c]
+        self.cost = 2 if (self.piece_captured != "--" or self.piece_moved == "wK") else 1
+        self.ID = self.get_chess_notation()
 
 
     def __eq__(self, other): # overriding ==
@@ -196,11 +207,12 @@ class Move():
         return False
 
 
-    def getChessNotation(self):
-        return self.getRankFile(self.startRow, self.startCol) + "-" +  self.getRankFile(self.endRow, self.endCol)
+    def get_chess_notation(self):
+        return self.get_rank_file(self.start_r, self.start_c) + "-" +  self.get_rank_file(self.end_r, self.end_c)
 
-    def getRankFile(self, row, col):
-        return self.colsToFiles[col] + self.rowsToRanks[row]
+
+    def get_rank_file(self, row, col):
+        return self.cols_to_files[col] + self.rows_to_ranks[row]
 
 
 number = 9

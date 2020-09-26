@@ -24,7 +24,7 @@ class Breakthru():
         self.state    = "MENU"
         self.screen   =  pygame.display.set_mode((WINDOW_WIDTH, WINDOW_HEIGHT))
         self.clock    =  pygame.time.Clock()
-        self.game_gui =  game_gui.GameGUI(self.screen, BOARD_SIZE, DIMENSION)
+        self.game_gui =  game_gui.GameGui(self.screen, BOARD_SIZE, DIMENSION)
         self.game     = None
 
     ###################### BUTTON ACTIONS ######################
@@ -121,10 +121,11 @@ class Breakthru():
         self.game_gui.init_board_index()
         self.game_gui.load_images(IMGS_PATH)
 
-        sqSelected = ()
+        sq_selected = ()
         pieces_selected = []
-        moveMade = False
-        validMoves = self.game.getAllPossibleMoves()
+        move_made = False
+        #self.game.valid_moves = self.game.get_all_possible_moves()
+        self.game.update_all_possible_moves()
 
         while self.state == "GAME":
             button_quit_game.draw()
@@ -145,44 +146,45 @@ class Breakthru():
                     board_location = self.game_gui.get_board_location(mouse_pos)
                     if board_location:
                         row, col = board_location
-                        if sqSelected != board_location and (self.game.isValidPiece(row, col) or len(pieces_selected) > 0):
-                            sqSelected = board_location
-                            pieces_selected.append(sqSelected)
+                        if sq_selected != board_location and (self.game.is_valid_piece(row, col) or len(pieces_selected) > 0):
+                            sq_selected = board_location
+                            pieces_selected.append(sq_selected)
                         else:
-                            sqSelected = ()
+                            sq_selected = ()
                             piece_selected = []
 
                         if len(pieces_selected) == 2:
                             move = game_engine.Move(pieces_selected[0], pieces_selected[1], self.game.board)
-                            for check_move in validMoves:
+                            for check_move in self.game.valid_moves:
                                 if move == check_move:
-                                    self.game.makeMove(move)
+                                    self.game.make_move(move)
                                 #else:
                                 #    print(move.ID + " - " + check_move.ID)
 
-                            sqSelected = ()
+                            sq_selected = ()
                             pieces_selected = []
-                            moveMade = True
+                            move_made = True
 
                 # KEYBOARD COMMANDS
                 elif event.type == pygame.KEYDOWN:
                     if event.key == pygame.K_DOWN:
-                        self.game.undoMove()
-                        sqSelected = ()
+                        self.game.undo_move()
+                        sq_selected = ()
                         pieces_selected = []
-                        moveMade = True
+                        move_made = True
 
                     if event.key == pygame.K_UP:
-                        self.game.restoreMove()
-                        sqSelected = ()
+                        self.game.restore_move()
+                        sq_selected = ()
                         pieces_selected = []
-                        moveMade = True
+                        move_made = True
 
-            if moveMade:
-                self.state = self.game.checkVictory()
+            if move_made:
+                self.state = self.game.check_victory()
                 if self.state == "GAME":
-                    validMoves = self.game.getAllPossibleMoves()
-                    moveMade = False
+                    #self.game.valid_moves = self.game.get_all_possible_moves()
+                    self.game.update_all_possible_moves()
+                    move_made = False
 
             # DRAW BOARD, PATHS AND PIECES
             self.game_gui.draw_board()
@@ -190,7 +192,7 @@ class Breakthru():
             if len(pieces_selected) == 1:
                 r, c = pieces_selected[0][0], pieces_selected[0][1]
                 correct_turn = self.game.is_correct_turn(r, c)
-                move_list, capture_list = self.game.check_single_piece_moves(r, c, validMoves)
+                move_list, capture_list = self.game.check_single_piece_moves(r, c)
                 self.game_gui.draw_highlighted_paths(r, c, correct_turn, move_list, capture_list)
 
             self.game_gui.draw_pieces(self.game.board)
