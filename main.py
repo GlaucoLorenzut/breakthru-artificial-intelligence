@@ -26,22 +26,32 @@ TURNER_SIZE = (275, 50)
 TURNER_COLOR = pygame.Color("blue")
 TURNER_COLOR_OUTLINE = pygame.Color("white")
 
-
 LOGGER_SIZE = (275, 360)
 LOGGER_COLOR = pygame.Color("blue")
 LOGGER_COLOR_OUTLINE = pygame.Color("white")
 
 
+
 class Breakthru():
 
     def __init__(self):
-        self.state    = "GAME"
+        self.state    = "MENU"
         self.screen   =  pygame.display.set_mode((WINDOW_WIDTH, WINDOW_HEIGHT))
         self.clock    =  pygame.time.Clock()
         self.game_gui =  game_gui.GameGui(self.screen, BOARD_SIZE, DIMENSION)
         self.game     = None
         self.sq_selected = ()
         self.pieces_selected = []
+
+        self.button_vs_gold_AI   = None
+        self.button_vs_silver_AI = None
+        self.button_multi_player = None
+        self.button_save_game    = None
+        self.button_load_game    = None
+        self.button_undo_move    = None
+        self.button_restore_move = None
+        self.button_quit_game    = None
+
         self.timer = 0
 
     ###################### BUTTON ACTIONS ######################
@@ -75,74 +85,57 @@ class Breakthru():
     ############################################################
 
 
-    def menu_screen(self):
+    def init_sw(self):
+        jnt.create_dir(SAVING_PATH)
+        pygame.display.set_caption("  Breakthru")
+        pygame.init()
+        pygame.font.init()
+
+        ######### INIT MENU ELEMENTS #############
         A = self.game_gui.board_size + self.game_gui.board_layout
-        panel_dx_layout = (A + 0.5*(WINDOW_WIDTH - A) - 0.5*MENU_BUTTON_SIZE[0], 0.5*WINDOW_HEIGHT)
+        menu_layout_dx = (A + 0.5*(WINDOW_WIDTH - A) - 0.5*MENU_BUTTON_SIZE[0], 0.5*WINDOW_HEIGHT)
 
 
-        button_vs_gold_AI = game_gui.Button(self.screen,
-                                               panel_dx_layout[0],
-                                               panel_dx_layout[1] - 0.5*MENU_BUTTON_SIZE[1] - MENU_BUTTON_SIZE[1] - 70,
+        self.button_vs_gold_AI = game_gui.Button(self.screen,
+                                               menu_layout_dx[0],
+                                               menu_layout_dx[1] - 0.5*MENU_BUTTON_SIZE[1] - MENU_BUTTON_SIZE[1] - 70,
                                                MENU_BUTTON_SIZE,
                                                MENU_BUTTON_COLOR,
                                                MENU_BUTTON_TEXT_SIZE,
                                                "vs Gold AI")
 
-        button_vs_silver_AI = game_gui.Button(self.screen,
-                                               panel_dx_layout[0],
-                                               panel_dx_layout[1] - 0.5*MENU_BUTTON_SIZE[1],
+        self.button_vs_silver_AI = game_gui.Button(self.screen,
+                                               menu_layout_dx[0],
+                                               menu_layout_dx[1] - 0.5*MENU_BUTTON_SIZE[1],
                                                MENU_BUTTON_SIZE,
                                                MENU_BUTTON_COLOR,
                                                MENU_BUTTON_TEXT_SIZE,
                                                "vs Silver AI")
 
-        button_multi_player = game_gui.Button(self.screen,
-                                               panel_dx_layout[0],
-                                               panel_dx_layout[1] - 0.5*MENU_BUTTON_SIZE[1] + MENU_BUTTON_SIZE[1] + 70,
+        self.button_multi_player = game_gui.Button(self.screen,
+                                               menu_layout_dx[0],
+                                               menu_layout_dx[1] - 0.5*MENU_BUTTON_SIZE[1] + MENU_BUTTON_SIZE[1] + 70,
                                                MENU_BUTTON_SIZE,
                                                MENU_BUTTON_COLOR,
                                                MENU_BUTTON_TEXT_SIZE,
                                                "Multi Player")
 
-
-        while bkt.state == "MENU" or bkt.state == "GOLD_WIN" or bkt.state == "SILVER_WIN" or bkt.state == "DRAW":
-            button_vs_gold_AI.draw()
-            button_vs_silver_AI.draw()
-            button_multi_player.draw()
-
-            for event in pygame.event.get():
-                # MOUSE COMMANDS
-                if event.type == pygame.QUIT:
-                    self.quit_action()
-                elif event.type == pygame.MOUSEBUTTONDOWN:
-                    mouse_pos = pygame.mouse.get_pos()
-
-                    button_vs_gold_AI.check(mouse_pos, self.init_game_action)
-                    button_vs_silver_AI.check(mouse_pos, self.init_game_action)
-                    button_multi_player.check(mouse_pos, self.init_game_action)
-
-            self.game_gui.draw_game_result(self.state)
-
-            self.clock.tick(MAX_FPS)
-            pygame.display.update()
-
-
-    def game_screen(self):
+        ######## INIT GAME ELEMENTS ###############
         A = self.game_gui.board_size + 2*self.game_gui.board_layout
-        panel_dx_layout = (0.5*A + 0.5*WINDOW_WIDTH, self.game_gui.board_layout+ 1)
+        game_layout_dx = (0.5*A + 0.5*WINDOW_WIDTH, self.game_gui.board_layout+ 1)
 
 
-        turner = game_gui.Turner(self.screen,
-                                 panel_dx_layout[0] - 0.5*TURNER_SIZE[0],
-                                 panel_dx_layout[1],
+        self.turner = game_gui.Turner(self.screen,
+                                 game_layout_dx[0] - 0.5*TURNER_SIZE[0],
+                                 game_layout_dx[1],
                                  TURNER_SIZE,
                                  TURNER_COLOR,
                                  TURNER_COLOR_OUTLINE,
                                  )
 
-        logger = game_gui.Logger(self.screen,
-                                 panel_dx_layout[0] - 0.5*LOGGER_SIZE[0],
-                                 WINDOW_HEIGHT - panel_dx_layout[1] - LOGGER_SIZE[1] + 9,
+        self.logger = game_gui.Logger(self.screen,
+                                 game_layout_dx[0] - 0.5*LOGGER_SIZE[0],
+                                 WINDOW_HEIGHT - game_layout_dx[1] - LOGGER_SIZE[1] + 9,
                                  LOGGER_SIZE,
                                  LOGGER_COLOR,
                                  LOGGER_COLOR_OUTLINE,
@@ -151,47 +144,82 @@ class Breakthru():
         button_layout_sx_dx = (-(GAME_BUTTON_SIZE[0] + 10), 10)
         button_layout_vertical = TURNER_SIZE[1]
 
-        button_save_game = game_gui.Button(self.screen,
-                                               panel_dx_layout[0] + button_layout_sx_dx[0],
-                                               panel_dx_layout[1] + button_layout_vertical + 20,
+        self.button_save_game = game_gui.Button(self.screen,
+                                               game_layout_dx[0] + button_layout_sx_dx[0],
+                                               game_layout_dx[1] + button_layout_vertical + 20,
                                                GAME_BUTTON_SIZE,
                                                GAME_BUTTON_COLOR,
                                                GAME_BUTTON_TEXT_SIZE,
                                                "Save Game")
 
-        button_load_game = game_gui.Button(self.screen,
-                                               panel_dx_layout[0] + button_layout_sx_dx[1],
-                                               panel_dx_layout[1] + button_layout_vertical + 20,
+        self.button_load_game = game_gui.Button(self.screen,
+                                               game_layout_dx[0] + button_layout_sx_dx[1],
+                                               game_layout_dx[1] + button_layout_vertical + 20,
                                                GAME_BUTTON_SIZE,
                                                GAME_BUTTON_COLOR,
                                                GAME_BUTTON_TEXT_SIZE,
                                                "Load Game")
 
-        button_undo_move = game_gui.Button(self.screen,
-                                               panel_dx_layout[0] + button_layout_sx_dx[0],
-                                               panel_dx_layout[1] + button_layout_vertical + GAME_BUTTON_SIZE[1] + 40,
+        self.button_undo_move = game_gui.Button(self.screen,
+                                               game_layout_dx[0] + button_layout_sx_dx[0],
+                                               game_layout_dx[1] + button_layout_vertical + GAME_BUTTON_SIZE[1] + 40,
                                                GAME_BUTTON_SIZE,
                                                GAME_BUTTON_COLOR,
                                                GAME_BUTTON_TEXT_SIZE,
                                                "Undo Move")
 
-        button_restore_move = game_gui.Button(self.screen,
-                                               panel_dx_layout[0] + button_layout_sx_dx[1],
-                                               panel_dx_layout[1] + button_layout_vertical + GAME_BUTTON_SIZE[1] + 40,
+        self.button_restore_move = game_gui.Button(self.screen,
+                                               game_layout_dx[0] + button_layout_sx_dx[1],
+                                               game_layout_dx[1] + button_layout_vertical + GAME_BUTTON_SIZE[1] + 40,
                                                GAME_BUTTON_SIZE,
                                                GAME_BUTTON_COLOR,
                                                GAME_BUTTON_TEXT_SIZE,
                                                "Restore Move")
 
-        button_quit_game = game_gui.Button(self.screen,
-                                               panel_dx_layout[0] - 0.5*GAME_BUTTON_SIZE[0],
-                                               panel_dx_layout[1] + button_layout_vertical + 2*GAME_BUTTON_SIZE[1] + 60,
+        self.button_quit_game = game_gui.Button(self.screen,
+                                               game_layout_dx[0] - 0.5*GAME_BUTTON_SIZE[0],
+                                               game_layout_dx[1] + button_layout_vertical + 2*GAME_BUTTON_SIZE[1] + 60,
                                                GAME_BUTTON_SIZE,
                                                GAME_BUTTON_COLOR,
                                                GAME_BUTTON_TEXT_SIZE,
                                                "Quit Game")
 
 
+    def draw_menu_elements(self):
+        self.button_vs_gold_AI.draw()
+        self.button_vs_silver_AI.draw()
+        self.button_multi_player.draw()
+
+    def draw_game_elements(self):
+        self.turner.draw()
+        self.logger.draw()
+        self.button_quit_game.draw()
+        self.button_save_game.draw()
+        self.button_load_game.draw()
+        self.button_undo_move.draw()
+        self.button_restore_move.draw()
+
+    def menu_screen(self):
+        while bkt.state != "GAME":
+            self.draw_menu_elements()
+
+            for event in pygame.event.get():
+                # MOUSE COMMANDS
+                if event.type == pygame.QUIT:
+                    self.quit_action()
+                elif event.type == pygame.MOUSEBUTTONDOWN:
+                    mouse_pos = pygame.mouse.get_pos()
+                    self.button_vs_gold_AI.check(mouse_pos, self.init_game_action)
+                    self.button_vs_silver_AI.check(mouse_pos, self.init_game_action)
+                    self.button_multi_player.check(mouse_pos, self.init_game_action)
+
+            self.game_gui.draw_game_result(self.state)
+
+            self.clock.tick(MAX_FPS)
+            pygame.display.update()
+
+
+    def game_screen(self):
         self.game = game_engine.GameEngine()
 
         self.game_gui.init_board_index()
@@ -200,17 +228,9 @@ class Breakthru():
         self.sq_selected = ()
         self.pieces_selected = []
         self.timer = 0
-        #self.game.valid_moves = self.game.get_all_possible_moves()
-        #self.game.update_all_possible_moves()
 
         while self.state == "GAME":
-            turner.draw()
-            logger.draw()
-            button_quit_game.draw()
-            button_save_game.draw()
-            button_load_game.draw()
-            button_undo_move.draw()
-            button_restore_move.draw()
+            self.draw_game_elements()
 
             for event in pygame.event.get():
                 # MOUSE COMMANDS
@@ -218,12 +238,11 @@ class Breakthru():
                     self.quit_action()
                 elif event.type == pygame.MOUSEBUTTONDOWN:
                     mouse_pos = pygame.mouse.get_pos()
-
-                    button_quit_game.check(mouse_pos, self.open_menu_action)
-                    button_save_game.check(mouse_pos, self.save_game_action)
-                    button_load_game.check(mouse_pos, self.load_game_action)
-                    button_undo_move.check(mouse_pos, self.undo_move_action)
-                    button_restore_move.check(mouse_pos, self.restore_move_action)
+                    self.button_quit_game.check(mouse_pos, self.open_menu_action)
+                    self.button_save_game.check(mouse_pos, self.save_game_action)
+                    self.button_load_game.check(mouse_pos, self.load_game_action)
+                    self.button_undo_move.check(mouse_pos, self.undo_move_action)
+                    self.button_restore_move.check(mouse_pos, self.restore_move_action)
 
                     self.make_the_move(mouse_pos)
 
@@ -241,13 +260,6 @@ class Breakthru():
             self.clock.tick(MAX_FPS)
             pygame.display.update()
 
-
-    def init_sw(self):
-        jnt.create_dir(SAVING_PATH)
-
-        pygame.display.set_caption("  Breakthru")
-        pygame.init()
-        pygame.font.init()
 
     def make_the_move(self, mouse_pos):
         start_clock = pygame.time.get_ticks()
@@ -272,6 +284,8 @@ class Breakthru():
         end_clock = pygame.time.get_ticks()
         self.timer += end_clock - start_clock
         print(self.timer)
+
+
 
 if __name__ == "__main__":
     os.environ['SDL_VIDEO_WINDOW_POS'] = "%d,%d" % (WINDOW_LAYOUT_X, WINDOW_LAYOUT_Y)

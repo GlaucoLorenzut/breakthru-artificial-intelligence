@@ -194,6 +194,7 @@ class Button():
         return False
 
 
+
 class Turner():
 
     def __init__(self, screen, x, y, size, color, outline_color=None):
@@ -220,6 +221,8 @@ class Turner():
         #        text,
         #        (self.x + (self.width / 2 - text.get_width() / 2), self.y + (self.height / 2 - text.get_height() / 2))
         #    )
+
+
 
 class Logger():
 
