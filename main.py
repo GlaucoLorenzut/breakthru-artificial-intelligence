@@ -27,7 +27,7 @@ TURNER_COLOR = pygame.Color("blue")
 TURNER_COLOR_OUTLINE = pygame.Color("white")
 
 
-LOGGER_SIZE = (275, 350)
+LOGGER_SIZE = (275, 360)
 LOGGER_COLOR = pygame.Color("blue")
 LOGGER_COLOR_OUTLINE = pygame.Color("white")
 
@@ -129,7 +129,7 @@ class Breakthru():
 
     def game_screen(self):
         A = self.game_gui.board_size + 2*self.game_gui.board_layout
-        panel_dx_layout = (0.5*A + 0.5*WINDOW_WIDTH, self.game_gui.board_layout)
+        panel_dx_layout = (0.5*A + 0.5*WINDOW_WIDTH, self.game_gui.board_layout+ 1)
 
 
         turner = game_gui.Turner(self.screen,
@@ -142,7 +142,7 @@ class Breakthru():
 
         logger = game_gui.Logger(self.screen,
                                  panel_dx_layout[0] - 0.5*LOGGER_SIZE[0],
-                                 WINDOW_HEIGHT - panel_dx_layout[1] - LOGGER_SIZE[1],
+                                 WINDOW_HEIGHT - panel_dx_layout[1] - LOGGER_SIZE[1] + 9,
                                  LOGGER_SIZE,
                                  LOGGER_COLOR,
                                  LOGGER_COLOR_OUTLINE,
