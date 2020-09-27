@@ -10,9 +10,8 @@ IMGS_PATH = "images"
 SAVING_PATH = "saves"
 DIMENSION = 11
 MAX_FPS = 15
-WINDOW_LAYOUT = (500, 80)
-WINDOW_WIDTH = 1040
-WINDOW_HEIGHT = 720
+WINDOW_LAYOUT_X, WINDOW_LAYOUT_Y = 250, 80
+WINDOW_WIDTH, WINDOW_HEIGHT = 1050, 720
 BOARD_SIZE = 616
 BUTTON_SIZE = (200, 50)
 BUTTON_TEXT_SIZE = 24
@@ -28,6 +27,7 @@ class Breakthru():
         self.game     = None
         self.sq_selected = ()
         self.pieces_selected = []
+        self.timer = 0
 
     ###################### BUTTON ACTIONS ######################
     def quit_action(self):
@@ -62,19 +62,27 @@ class Breakthru():
 
     def menu_screen(self):
 
-        panel_dx_layout = (self.game_gui.board_size + 2 * self.game_gui.board_layout, self.game_gui.board_layout)
+        panel_dx_layout = (self.game_gui.board_size + 2 * self.game_gui.board_layout, 0.5*WINDOW_HEIGHT)
 
-        button_single_player = game_gui.Button(self.screen,
+        button_vs_gold_AI = game_gui.Button(self.screen,
                                                panel_dx_layout[0] + 50,
-                                               panel_dx_layout[1],
+                                               panel_dx_layout[1] - 0.5*BUTTON_SIZE[1] - BUTTON_SIZE[1] - 70,
                                                BUTTON_SIZE,
                                                pygame.Color("gray"),
                                                BUTTON_TEXT_SIZE,
-                                               "Single Player")
+                                               "vs Gold AI")
+
+        button_vs_silver_AI = game_gui.Button(self.screen,
+                                               panel_dx_layout[0] + 50,
+                                               panel_dx_layout[1] - 0.5*BUTTON_SIZE[1],
+                                               BUTTON_SIZE,
+                                               pygame.Color("gray"),
+                                               BUTTON_TEXT_SIZE,
+                                               "vs Siver AI")
 
         button_multi_player = game_gui.Button(self.screen,
                                                panel_dx_layout[0] + 50,
-                                               panel_dx_layout[1] + BUTTON_SIZE[1] + 50,
+                                               panel_dx_layout[1] - 0.5*BUTTON_SIZE[1] + BUTTON_SIZE[1] + 70,
                                                BUTTON_SIZE,
                                                pygame.Color("gray"),
                                                BUTTON_TEXT_SIZE,
@@ -82,7 +90,8 @@ class Breakthru():
 
 
         while bkt.state == "MENU" or bkt.state == "GOLD_WIN" or bkt.state == "SILVER_WIN" or bkt.state == "DRAW":
-            button_single_player.draw()
+            button_vs_gold_AI.draw()
+            button_vs_silver_AI.draw()
             button_multi_player.draw()
 
             for event in pygame.event.get():
@@ -92,7 +101,8 @@ class Breakthru():
                 elif event.type == pygame.MOUSEBUTTONDOWN:
                     mouse_pos = pygame.mouse.get_pos()
 
-                    button_single_player.check(mouse_pos, self.init_game_action)
+                    button_vs_gold_AI.check(mouse_pos, self.init_game_action)
+                    button_vs_silver_AI.check(mouse_pos, self.init_game_action)
                     button_multi_player.check(mouse_pos, self.init_game_action)
 
             self.game_gui.draw_game_result(self.state)
@@ -153,6 +163,7 @@ class Breakthru():
 
         self.sq_selected = ()
         self.pieces_selected = []
+        self.timer = 0
         #self.game.valid_moves = self.game.get_all_possible_moves()
         #self.game.update_all_possible_moves()
 
@@ -176,27 +187,7 @@ class Breakthru():
                     button_undo_move.check(mouse_pos, self.undo_move_action)
                     button_restore_move.check(mouse_pos, self.restore_move_action)
 
-                    board_location = self.game_gui.get_board_location(mouse_pos)
-                    if board_location:
-                        row, col = board_location
-                        if self.sq_selected != board_location and (self.game.is_valid_piece(row, col) or len(self.pieces_selected) > 0):
-                            self.sq_selected = board_location
-                            self.pieces_selected.append(self.sq_selected)
-                        else:
-                            self.sq_selected = ()
-                            self.piece_selected = []
-
-                        if len(self.pieces_selected) == 2:
-                            move = game_engine.Move(self.pieces_selected[0], self.pieces_selected[1], self.game.board)
-                            for check_move in self.game.valid_moves:
-                                if move == check_move:
-                                    self.game.make_move(move)
-                                #else:
-                                #    print(move.ID + " - " + check_move.ID)
-
-                            self.state = self.game.check_victory()
-                            self.sq_selected = ()
-                            self.pieces_selected = []
+                    self.make_the_move(mouse_pos)
 
             # DRAW BOARD, PATHS AND PIECES
             self.game_gui.draw_board()
@@ -215,15 +206,37 @@ class Breakthru():
 
     def init_sw(self):
         jnt.create_dir(SAVING_PATH)
-        os.environ['SDL_VIDEO_WINDOW_POS'] = "%d,%d" % WINDOW_LAYOUT
 
         pygame.display.set_caption("  Breakthru")
         pygame.init()
         pygame.font.init()
 
+    def make_the_move(self, mouse_pos):
+        start_clock = pygame.time.get_ticks()
+        board_location = self.game_gui.get_board_location(mouse_pos)
+        if board_location:
+            row, col = board_location
+            if self.sq_selected != board_location and (self.game.is_valid_piece(row, col) or len(self.pieces_selected) > 0):
+                self.sq_selected = board_location
+                self.pieces_selected.append(self.sq_selected)
+            else:
+                self.sq_selected = ()
+                self.piece_selected = []
+
+            if len(self.pieces_selected) == 2:
+                move = game_engine.Move(self.pieces_selected[0], self.pieces_selected[1], self.game.board)
+                if move in self.game.valid_moves:
+                    self.game.make_move(move)
+
+                self.state = self.game.check_victory()
+                self.sq_selected = ()
+                self.pieces_selected = []
+        end_clock = pygame.time.get_ticks()
+        self.timer += end_clock - start_clock
+        print(self.timer)
 
 if __name__ == "__main__":
-
+    os.environ['SDL_VIDEO_WINDOW_POS'] = "%d,%d" % (WINDOW_LAYOUT_X, WINDOW_LAYOUT_Y)
     bkt = Breakthru()
     bkt.init_sw()
 

@@ -49,11 +49,12 @@ class GameEngine():
             return True
         return False
 
-    #TODO
+
     def update_turn(self, move):
+        self.turn = (self.turn + move.cost) % 4
         #print("( " + str(self.move_cost) + " + "+ str(move.cost) +" )")
         #print(self.turn)
-        self.turn = (self.turn + move.cost) % 4
+
         #print(str(self.turn) + "\n")
         #if self.move_cost + move.cost < 2:
         #    self.move_cost = self.move_cost + move.cost
@@ -65,7 +66,7 @@ class GameEngine():
         #else:
         #    print("ERROR: too many moves ( " + str(self.move_cost) + " + "+ str(move.cost) +" )")
 
-    # TODO
+
     def reset_turn(self, move):
         self.turn = (self.turn - move.cost) % 4
         #print("( " + str(self.move_cost) + " + "+ str(move.cost) +" )")
@@ -91,7 +92,7 @@ class GameEngine():
         print("move: " + move.ID)
         #self.print_board()
 
-    #TODO
+
     def undo_move(self):
         if len(self.game_log) > 0:
             last_move = self.game_log.pop()  # take and remove in one passage
