@@ -35,7 +35,7 @@ LOGGER_COLOR_OUTLINE = pygame.Color("white")
 class Breakthru():
 
     def __init__(self):
-        self.state    = "MENU"
+        self.state    = "GAME"
         self.screen   =  pygame.display.set_mode((WINDOW_WIDTH, WINDOW_HEIGHT))
         self.clock    =  pygame.time.Clock()
         self.game_gui =  game_gui.GameGui(self.screen, BOARD_SIZE, DIMENSION)
@@ -280,27 +280,54 @@ class Breakthru():
 
     def make_the_move(self, mouse_pos):
         start_clock = pygame.time.get_ticks()
-        board_location = self.game_gui.get_board_location(mouse_pos)
-        if board_location:
-            row, col = board_location
-            if self.sq_selected != board_location and (self.game.is_valid_piece(row, col) or len(self.pieces_selected) > 0):
-                self.sq_selected = board_location
-                self.pieces_selected.append(self.sq_selected)
+        new_location = self.game_gui.get_board_location(mouse_pos)
+        if new_location:
+            row, col = new_location
+
+            if self.sq_selected != new_location:
+                if len(self.pieces_selected) == 0 and self.game.is_valid_piece(row, col):
+                    self.sq_selected = new_location
+                    self.pieces_selected.append(self.sq_selected)
+                elif len(self.pieces_selected) == 1 and not self.game.is_valid_piece(row, col):
+                    self.sq_selected = new_location
+                    self.pieces_selected.append(self.sq_selected)
+                elif len(self.pieces_selected) == 1 and self.game.is_valid_piece(row, col):
+                    if self.game.is_piece_of_right_turn(row, col):
+                        self.sq_selected = new_location
+                        self.pieces_selected = [self.sq_selected]
+                    else:
+                        self.sq_selected = new_location
+                        self.pieces_selected.append(self.sq_selected)
+
+                if len(self.pieces_selected) == 2:
+                    move = game_engine.Move(self.pieces_selected[0], self.pieces_selected[1], self.game.board)
+                    if move in self.game.valid_moves:
+                        self.game.make_move(move)
+                        self.state = self.game.check_victory()
+                        self.sq_selected = ()
+                        self.pieces_selected = []
+                    else:
+                        self.sq_selected = new_location
+                        self.pieces_selected = [self.sq_selected]
             else:
                 self.sq_selected = ()
                 self.piece_selected = []
 
-            if len(self.pieces_selected) == 2:
-                move = game_engine.Move(self.pieces_selected[0], self.pieces_selected[1], self.game.board)
-                if move in self.game.valid_moves:
-                    self.game.make_move(move)
+            #else:
+            #    pass
+                #self.sq_selected = ()
+                #self.piece_selected = []
 
-                self.state = self.game.check_victory()
-                self.sq_selected = ()
-                self.pieces_selected = []
+                print(self.sq_selected)
+                print(new_location)
+                print(self.pieces_selected)
+                print("\n")
+
+
+
         end_clock = pygame.time.get_ticks()
         self.timer += end_clock - start_clock
-        print(self.timer)
+        #print(self.timer)
 
 
 
