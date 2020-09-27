@@ -71,6 +71,7 @@ class GameGui():
 
 
     def draw_board(self):
+        pygame.draw.rect(self.screen, pygame.Color("white"), (self.board_layout - 1, self.board_layout - 1, self.board_size + 3, self.board_size + 3), 0)
         pygame.draw.rect(self.screen, pygame.Color("blue"), pygame.Rect(self.board_layout, self.board_layout, self.board_size, self.board_size))
 
         lower_inner_board = self.board_layout + 3 * self.square_size - 1
@@ -137,22 +138,23 @@ class GameGui():
             text_color = pygame.Color("red")
             color = pygame.Color("black")
 
+        pygame.draw.rect(self.screen, pygame.Color("white"), (self.board_layout - 1, self.board_layout - 1, self.board_size + 3, self.board_size + 3), 0)
         self.text_rect(
             text,
             50,
-            (self.board_layout, self.board_layout),
-            (self.board_size + 1, self.board_size + 1),
+            (self.board_layout+1, self.board_layout+1),
+            (self.board_size-1, self.board_size-1),
             text_color,
             color
         )
 
         line_length = self.board_layout + self.board_size
         # rows
-        pygame.draw.line(self.screen, pygame.Color("white"), (self.board_layout, self.board_layout), (line_length, self.board_layout), 1)
-        pygame.draw.line(self.screen, pygame.Color("white"), (self.board_layout, line_length), (line_length, line_length), 1)
+        #pygame.draw.line(self.screen, pygame.Color("white"), (self.board_layout, self.board_layout), (line_length, self.board_layout), 1)
+        #pygame.draw.line(self.screen, pygame.Color("white"), (self.board_layout, line_length), (line_length, line_length), 1)
         # cols
-        pygame.draw.line(self.screen, pygame.Color("white"), (self.board_layout, self.board_layout), (self.board_layout, line_length), 1)
-        pygame.draw.line(self.screen, pygame.Color("white"), (line_length, self.board_layout), (line_length, line_length), 1)
+        #pygame.draw.line(self.screen, pygame.Color("white"), (self.board_layout, self.board_layout), (self.board_layout, line_length), 1)
+        #pygame.draw.line(self.screen, pygame.Color("white"), (line_length, self.board_layout), (line_length, line_length), 1)
 
 
 
@@ -190,3 +192,58 @@ class Button():
                 return action()
             return True
         return False
+
+
+class Turner():
+
+    def __init__(self, screen, x, y, size, color, outline_color=None):
+        self.screen = screen
+        self.x = x
+        self.y = y
+        self.width = size[0]
+        self.height = size[1]
+        self.color = color
+        #self.text_size = text_size
+        #self.text = text
+        self.outline_color = outline_color
+
+    def draw(self):
+        if self.outline_color:
+            pygame.draw.rect(self.screen, self.outline_color, (self.x - 2, self.y - 2, self.width + 4, self.height + 4), 0)
+
+        pygame.draw.rect(self.screen, self.color, (self.x, self.y, self.width, self.height), 0)
+
+        #if self.text != '':
+        #    font = pygame.font.SysFont(None, self.text_size)
+        #    text = font.render(self.text, 1, (0, 0, 0))
+        #    self.screen.blit(
+        #        text,
+        #        (self.x + (self.width / 2 - text.get_width() / 2), self.y + (self.height / 2 - text.get_height() / 2))
+        #    )
+
+class Logger():
+
+    def __init__(self, screen, x, y, size, color, outline_color=None):
+        self.screen = screen
+        self.x = x
+        self.y = y
+        self.width = size[0]
+        self.height = size[1]
+        self.color = color
+        #self.text_size = text_size
+        #self.text = text
+        self.outline_color = outline_color
+
+    def draw(self):
+        if self.outline_color:
+            pygame.draw.rect(self.screen, self.outline_color, (self.x - 2, self.y - 2, self.width + 4, self.height + 4), 0)
+
+        pygame.draw.rect(self.screen, self.color, (self.x, self.y, self.width, self.height), 0)
+
+        #if self.text != '':
+        #    font = pygame.font.SysFont(None, self.text_size)
+        #    text = font.render(self.text, 1, (0, 0, 0))
+        #    self.screen.blit(
+        #        text,
+        #        (self.x + (self.width / 2 - text.get_width() / 2), self.y + (self.height / 2 - text.get_height() / 2))
+        #    )

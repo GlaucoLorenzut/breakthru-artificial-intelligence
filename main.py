@@ -13,14 +13,29 @@ MAX_FPS = 15
 WINDOW_LAYOUT_X, WINDOW_LAYOUT_Y = 250, 80
 WINDOW_WIDTH, WINDOW_HEIGHT = 1050, 720
 BOARD_SIZE = 616
-BUTTON_SIZE = (200, 50)
-BUTTON_TEXT_SIZE = 24
+
+MENU_BUTTON_SIZE = (200, 60)
+MENU_BUTTON_TEXT_SIZE = 30
+MENU_BUTTON_COLOR = pygame.Color("gray")
+
+GAME_BUTTON_SIZE = (130, 40)
+GAME_BUTTON_TEXT_SIZE = 23
+GAME_BUTTON_COLOR = pygame.Color("gray")
+
+TURNER_SIZE = (275, 50)
+TURNER_COLOR = pygame.Color("blue")
+TURNER_COLOR_OUTLINE = pygame.Color("white")
+
+
+LOGGER_SIZE = (275, 350)
+LOGGER_COLOR = pygame.Color("blue")
+LOGGER_COLOR_OUTLINE = pygame.Color("white")
 
 
 class Breakthru():
 
     def __init__(self):
-        self.state    = "MENU"
+        self.state    = "GAME"
         self.screen   =  pygame.display.set_mode((WINDOW_WIDTH, WINDOW_HEIGHT))
         self.clock    =  pygame.time.Clock()
         self.game_gui =  game_gui.GameGui(self.screen, BOARD_SIZE, DIMENSION)
@@ -61,31 +76,32 @@ class Breakthru():
 
 
     def menu_screen(self):
+        A = self.game_gui.board_size + self.game_gui.board_layout
+        panel_dx_layout = (A + 0.5*(WINDOW_WIDTH - A) - 0.5*MENU_BUTTON_SIZE[0], 0.5*WINDOW_HEIGHT)
 
-        panel_dx_layout = (self.game_gui.board_size + 2 * self.game_gui.board_layout, 0.5*WINDOW_HEIGHT)
 
         button_vs_gold_AI = game_gui.Button(self.screen,
-                                               panel_dx_layout[0] + 50,
-                                               panel_dx_layout[1] - 0.5*BUTTON_SIZE[1] - BUTTON_SIZE[1] - 70,
-                                               BUTTON_SIZE,
-                                               pygame.Color("gray"),
-                                               BUTTON_TEXT_SIZE,
+                                               panel_dx_layout[0],
+                                               panel_dx_layout[1] - 0.5*MENU_BUTTON_SIZE[1] - MENU_BUTTON_SIZE[1] - 70,
+                                               MENU_BUTTON_SIZE,
+                                               MENU_BUTTON_COLOR,
+                                               MENU_BUTTON_TEXT_SIZE,
                                                "vs Gold AI")
 
         button_vs_silver_AI = game_gui.Button(self.screen,
-                                               panel_dx_layout[0] + 50,
-                                               panel_dx_layout[1] - 0.5*BUTTON_SIZE[1],
-                                               BUTTON_SIZE,
-                                               pygame.Color("gray"),
-                                               BUTTON_TEXT_SIZE,
-                                               "vs Siver AI")
+                                               panel_dx_layout[0],
+                                               panel_dx_layout[1] - 0.5*MENU_BUTTON_SIZE[1],
+                                               MENU_BUTTON_SIZE,
+                                               MENU_BUTTON_COLOR,
+                                               MENU_BUTTON_TEXT_SIZE,
+                                               "vs Silver AI")
 
         button_multi_player = game_gui.Button(self.screen,
-                                               panel_dx_layout[0] + 50,
-                                               panel_dx_layout[1] - 0.5*BUTTON_SIZE[1] + BUTTON_SIZE[1] + 70,
-                                               BUTTON_SIZE,
-                                               pygame.Color("gray"),
-                                               BUTTON_TEXT_SIZE,
+                                               panel_dx_layout[0],
+                                               panel_dx_layout[1] - 0.5*MENU_BUTTON_SIZE[1] + MENU_BUTTON_SIZE[1] + 70,
+                                               MENU_BUTTON_SIZE,
+                                               MENU_BUTTON_COLOR,
+                                               MENU_BUTTON_TEXT_SIZE,
                                                "Multi Player")
 
 
@@ -112,48 +128,68 @@ class Breakthru():
 
 
     def game_screen(self):
+        A = self.game_gui.board_size + 2*self.game_gui.board_layout
+        panel_dx_layout = (0.5*A + 0.5*WINDOW_WIDTH, self.game_gui.board_layout)
 
-        panel_dx_layout = (self.game_gui.board_size + 2 * self.game_gui.board_layout, self.game_gui.board_layout)
 
-        button_quit_game = game_gui.Button(self.screen,
-                                               panel_dx_layout[0] + 50,
-                                               panel_dx_layout[1],
-                                               BUTTON_SIZE,
-                                               pygame.Color("gray"),
-                                               BUTTON_TEXT_SIZE,
-                                               "Quit Game")
+        turner = game_gui.Turner(self.screen,
+                                 panel_dx_layout[0] - 0.5*TURNER_SIZE[0],
+                                 panel_dx_layout[1],
+                                 TURNER_SIZE,
+                                 TURNER_COLOR,
+                                 TURNER_COLOR_OUTLINE,
+                                 )
+
+        logger = game_gui.Logger(self.screen,
+                                 panel_dx_layout[0] - 0.5*LOGGER_SIZE[0],
+                                 WINDOW_HEIGHT - panel_dx_layout[1] - LOGGER_SIZE[1],
+                                 LOGGER_SIZE,
+                                 LOGGER_COLOR,
+                                 LOGGER_COLOR_OUTLINE,
+                                 )
+
+        button_layout_sx_dx = (-(GAME_BUTTON_SIZE[0] + 10), 10)
+        button_layout_vertical = TURNER_SIZE[1]
 
         button_save_game = game_gui.Button(self.screen,
-                                               panel_dx_layout[0] + 50,
-                                               panel_dx_layout[1] + BUTTON_SIZE[1] + 50,
-                                               BUTTON_SIZE,
-                                               pygame.Color("gray"),
-                                               BUTTON_TEXT_SIZE,
+                                               panel_dx_layout[0] + button_layout_sx_dx[0],
+                                               panel_dx_layout[1] + button_layout_vertical + 20,
+                                               GAME_BUTTON_SIZE,
+                                               GAME_BUTTON_COLOR,
+                                               GAME_BUTTON_TEXT_SIZE,
                                                "Save Game")
 
         button_load_game = game_gui.Button(self.screen,
-                                               panel_dx_layout[0] + 50,
-                                               panel_dx_layout[1] + 2*BUTTON_SIZE[1] + 100,
-                                               BUTTON_SIZE,
-                                               pygame.Color("gray"),
-                                               BUTTON_TEXT_SIZE,
+                                               panel_dx_layout[0] + button_layout_sx_dx[1],
+                                               panel_dx_layout[1] + button_layout_vertical + 20,
+                                               GAME_BUTTON_SIZE,
+                                               GAME_BUTTON_COLOR,
+                                               GAME_BUTTON_TEXT_SIZE,
                                                "Load Game")
 
         button_undo_move = game_gui.Button(self.screen,
-                                               panel_dx_layout[0] + 50,
-                                               panel_dx_layout[1] + 3*BUTTON_SIZE[1] + 150,
-                                               BUTTON_SIZE,
-                                               pygame.Color("gray"),
-                                               BUTTON_TEXT_SIZE,
+                                               panel_dx_layout[0] + button_layout_sx_dx[0],
+                                               panel_dx_layout[1] + button_layout_vertical + GAME_BUTTON_SIZE[1] + 40,
+                                               GAME_BUTTON_SIZE,
+                                               GAME_BUTTON_COLOR,
+                                               GAME_BUTTON_TEXT_SIZE,
                                                "Undo Move")
 
         button_restore_move = game_gui.Button(self.screen,
-                                               panel_dx_layout[0] + 50,
-                                               panel_dx_layout[1] + 4*BUTTON_SIZE[1] + 200,
-                                               BUTTON_SIZE,
-                                               pygame.Color("gray"),
-                                               BUTTON_TEXT_SIZE,
+                                               panel_dx_layout[0] + button_layout_sx_dx[1],
+                                               panel_dx_layout[1] + button_layout_vertical + GAME_BUTTON_SIZE[1] + 40,
+                                               GAME_BUTTON_SIZE,
+                                               GAME_BUTTON_COLOR,
+                                               GAME_BUTTON_TEXT_SIZE,
                                                "Restore Move")
+
+        button_quit_game = game_gui.Button(self.screen,
+                                               panel_dx_layout[0] - 0.5*GAME_BUTTON_SIZE[0],
+                                               panel_dx_layout[1] + button_layout_vertical + 2*GAME_BUTTON_SIZE[1] + 60,
+                                               GAME_BUTTON_SIZE,
+                                               GAME_BUTTON_COLOR,
+                                               GAME_BUTTON_TEXT_SIZE,
+                                               "Quit Game")
 
 
         self.game = game_engine.GameEngine()
@@ -168,6 +204,8 @@ class Breakthru():
         #self.game.update_all_possible_moves()
 
         while self.state == "GAME":
+            turner.draw()
+            logger.draw()
             button_quit_game.draw()
             button_save_game.draw()
             button_load_game.draw()
