@@ -52,15 +52,27 @@ class Breakthru():
         self.button_restore_move = None
         self.button_quit_game    = None
 
+        self.multi_player = True
+        self.AI_turn = True
         self.timer = 0
+
 
     ###################### BUTTON ACTIONS ######################
     def quit_action(self):
         pygame.quit()
         quit()
 
-    def init_game_action(self):
+    def init_multiplayer_game_action(self):
         self.state = "GAME"
+        self.multi_player = True
+
+    def init_vs_goldAI_game_action(self):
+        self.state = "GAME"
+        self.multi_player = False
+
+    def init_vs_silverAI_game_action(self):
+        self.state = "GAME"
+        self.multi_player = False
 
     def open_menu_action(self):
         self.state = "MENU"
@@ -209,9 +221,9 @@ class Breakthru():
                     self.quit_action()
                 elif event.type == pygame.MOUSEBUTTONDOWN:
                     mouse_pos = pygame.mouse.get_pos()
-                    self.button_vs_gold_AI.check(mouse_pos, self.init_game_action)
-                    self.button_vs_silver_AI.check(mouse_pos, self.init_game_action)
-                    self.button_multi_player.check(mouse_pos, self.init_game_action)
+                    self.button_vs_gold_AI.check(mouse_pos, self.init_vs_goldAI_game_action)
+                    self.button_vs_silver_AI.check(mouse_pos, self.init_vs_silverAI_game_action)
+                    self.button_multi_player.check(mouse_pos, self.init_multiplayer_game_action)
 
             self.game_gui.draw_game_result(self.state)
 
@@ -232,6 +244,7 @@ class Breakthru():
         while self.state == "GAME":
             self.draw_game_elements()
 
+
             for event in pygame.event.get():
                 # MOUSE COMMANDS
                 if event.type == pygame.QUIT:
@@ -244,7 +257,11 @@ class Breakthru():
                     self.button_undo_move.check(mouse_pos, self.undo_move_action)
                     self.button_restore_move.check(mouse_pos, self.restore_move_action)
 
-                    self.make_the_move(mouse_pos)
+                    if self.multi_player or not self.AI_turn:
+                        self.make_the_move(mouse_pos)
+
+                    if self.AI_turn:
+                        pass
 
             # DRAW BOARD, PATHS AND PIECES
             self.game_gui.draw_board()
