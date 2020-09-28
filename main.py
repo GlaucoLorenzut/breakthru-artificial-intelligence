@@ -4,6 +4,7 @@ import game_engine
 import game_gui
 import janitor as jnt
 from pathlib import Path
+import game_ai
 
 
 IMGS_PATH = "images"
@@ -35,7 +36,7 @@ LOGGER_COLOR_OUTLINE = pygame.Color("white")
 class Breakthru():
 
     def __init__(self):
-        self.state    = "GAME"
+        self.state    = "MENU"
         self.screen   =  pygame.display.set_mode((WINDOW_WIDTH, WINDOW_HEIGHT))
         self.clock    =  pygame.time.Clock()
         self.game_gui =  game_gui.GameGui(self.screen, BOARD_SIZE, DIMENSION)
@@ -52,6 +53,7 @@ class Breakthru():
         self.button_restore_move = None
         self.button_quit_game    = None
 
+        self.ai = game_ai.AI(None)
         self.multi_player = True
         self.AI_turn = True
         self.timer = 0
@@ -69,10 +71,12 @@ class Breakthru():
     def init_vs_goldAI_game_action(self):
         self.state = "GAME"
         self.multi_player = False
+        self.ai.behaviour = "THE_RANDOM_GUY"
 
     def init_vs_silverAI_game_action(self):
         self.state = "GAME"
         self.multi_player = False
+        self.ai.behaviour = "THE_NOMNOM_GUY"
 
     def open_menu_action(self):
         self.state = "MENU"
@@ -244,6 +248,13 @@ class Breakthru():
         while self.state == "GAME":
             self.draw_game_elements()
 
+            if not self.multi_player and self.AI_turn:
+                move_ai = self.ai.choose_move(self.game.valid_moves)
+                if move_ai:
+                    self.game.make_move(move_ai)
+                    self.state = self.game.check_victory()
+                    self.sq_selected = ()
+                    self.pieces_selected = []
 
             for event in pygame.event.get():
                 # MOUSE COMMANDS
@@ -260,8 +271,7 @@ class Breakthru():
                     if self.multi_player or not self.AI_turn:
                         self.make_the_move(mouse_pos)
 
-                    if self.AI_turn:
-                        pass
+
 
             # DRAW BOARD, PATHS AND PIECES
             self.game_gui.draw_board()
