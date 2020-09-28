@@ -308,7 +308,7 @@ class Breakthru():
                         self.pieces_selected = []
                     else:
                         self.sq_selected = new_location
-                        self.pieces_selected = [self.sq_selected]
+                        self.pieces_selected = [new_location] if self.game.is_valid_piece(row, col) else []
             else:
                 self.sq_selected = ()
                 self.piece_selected = []
@@ -318,10 +318,10 @@ class Breakthru():
                 #self.sq_selected = ()
                 #self.piece_selected = []
 
-                print(self.sq_selected)
-                print(new_location)
-                print(self.pieces_selected)
-                print("\n")
+            print(self.sq_selected)
+            print(new_location)
+            print(self.pieces_selected)
+            print("\n")
 
 
 
