@@ -31,12 +31,28 @@ LOGGER_SIZE = (275, 360)
 LOGGER_COLOR = pygame.Color("blue")
 LOGGER_COLOR_OUTLINE = pygame.Color("white")
 
-
+TEST = [
+   "move  [ a3-d5 ]",
+   "move  [ a3-d5 ]",
+   "move  [ a3-d5 ]",
+   "move  [ a3-d5 ]",
+   "move  [ a3-d5 ]",
+   "move  [ a3-d5 ]",
+   "move  [ a3-d5 ]",
+   "move  [ a3-d5 ]",
+   "move  [ a3-d5 ]",
+   "move  [ a3-d5 ]",
+   "move  [ a3-d5 ]",
+   "move  [ a3-d5 ]",
+   "move  [ a3-d5 ]",
+   "move  [ a3-d5 ]",
+   "move  [ a3-d5 ]"
+]
 
 class Breakthru():
 
     def __init__(self):
-        self.state    = "MENU"
+        self.state    = "GAME"
         self.screen   =  pygame.display.set_mode((WINDOW_WIDTH, WINDOW_HEIGHT))
         self.clock    =  pygame.time.Clock()
         self.game_gui =  game_gui.GameGui(self.screen, BOARD_SIZE, DIMENSION)
@@ -90,13 +106,17 @@ class Breakthru():
         self.game = jnt.pickle_load(Path(SAVING_PATH) / "save.pickle")
 
     def undo_move_action(self):
-        self.game.undo_move()
+        gold_turn = self.game.is_gold_turn()
+        move_id = self.game.undo_move()
+        self.logger.print_move(move_id, gold_turn, "undo")
         #self.state = self.game.check_victory()
         self.sq_selected = ()
         self.pieces_selected = []
 
     def restore_move_action(self):
-        self.game.restore_move()
+        gold_turn = self.game.is_gold_turn()
+        move_id = self.game.restore_move()
+        self.logger.print_move(move_id, gold_turn, "restore")
         self.state = self.game.check_victory()
         self.sq_selected = ()
         self.pieces_selected = []
@@ -209,7 +229,7 @@ class Breakthru():
         self.button_multi_player.draw()
 
     def draw_game_elements(self):
-        self.turner.draw()
+        self.turner.draw(self.game.is_gold_turn(), self.ai.timer)
         self.logger.draw()
         self.button_quit_game.draw()
         self.button_save_game.draw()
@@ -245,15 +265,20 @@ class Breakthru():
 
         self.sq_selected = ()
         self.pieces_selected = []
-        self.timer = 0
-
+        self.logger.clean_logger()
+        #self.timer = 0
+        #for test in TEST:
+        #    self.logger.print_move(test)
+#
         while self.state == "GAME":
             self.draw_game_elements()
 
             if not self.multi_player and self.is_AI_turn():
                 move_ai = self.ai.choose_move(self.game.valid_moves)
                 if move_ai:
-                    self.game.make_move(move_ai)
+                    gold_turn = self.game.is_gold_turn()
+                    move_id = self.game.make_move(move_ai)
+                    self.logger.print_move(move_id, gold_turn)
                     self.state = self.game.check_victory()
                     self.sq_selected = ()
                     self.pieces_selected = []
@@ -313,7 +338,9 @@ class Breakthru():
                 if len(self.pieces_selected) == 2:
                     move = game_engine.Move(self.pieces_selected[0], self.pieces_selected[1], self.game.board)
                     if move in self.game.valid_moves:
-                        self.game.make_move(move)
+                        gold_turn = self.game.is_gold_turn()
+                        move_id = self.game.make_move(move)
+                        self.logger.print_move(move_id, gold_turn)
                         self.state = self.game.check_victory()
                         self.sq_selected = ()
                         self.pieces_selected = []
@@ -329,10 +356,10 @@ class Breakthru():
                 #self.sq_selected = ()
                 #self.piece_selected = []
 
-            print(self.sq_selected)
-            print(new_location)
-            print(self.pieces_selected)
-            print("\n")
+            #print(self.sq_selected)
+            #print(new_location)
+            #print(self.pieces_selected)
+            #print("\n")
 
 
     def is_AI_turn(self):
@@ -351,10 +378,10 @@ if __name__ == "__main__":
     while True:
         bkt.screen.fill(pygame.Color("black"))
 
-        if bkt.state == "MENU" or bkt.state == "GOLD_WIN" or bkt.state == "SILVER_WIN" or bkt.state == "DRAW":
+        if bkt.state != "GAME": #== "MENU" or bkt.state == "GOLD_WIN" or bkt.state == "SILVER_WIN" or bkt.state == "DRAW":
             bkt.menu_screen()
         elif bkt.state == "GAME":
             bkt.game_screen()
-        else:
-            print("[ERROR]: state is ( " + bkt.state + " )")
-            bkt.quit_action()
+        #else:
+        #    print("[ERROR]: state is ( " + bkt.state + " )")
+        #    bkt.quit_action()

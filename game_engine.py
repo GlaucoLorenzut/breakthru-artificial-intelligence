@@ -89,8 +89,7 @@ class GameEngine():
         self.restore_log = []
 
         self.update_all_possible_moves()
-        print("move: " + move.ID)
-        #self.print_board()
+        return move.ID
 
 
     def undo_move(self):
@@ -103,7 +102,7 @@ class GameEngine():
             self.restore_log.append(last_move)
 
             self.update_all_possible_moves()
-            print("undo: " + last_move.ID)
+            return last_move.ID
 
 
     def restore_move(self):
@@ -116,7 +115,7 @@ class GameEngine():
             self.game_log.append(restore_move)
 
             self.update_all_possible_moves()
-            print("restore: " + restore_move.ID)
+            return restore_move.ID
 
 
     def get_all_possible_moves(self): # not used anymore directly

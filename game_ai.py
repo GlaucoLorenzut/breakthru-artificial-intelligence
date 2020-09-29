@@ -4,6 +4,7 @@ from random import randint
 from datetime import datetime
 import pygame
 import game_engine
+import time
 
 
 class AI():
@@ -22,9 +23,11 @@ class AI():
             move = self.nomnom_behaviour(move_list)
         elif self.behaviour == "THE_RANDOM_GUY":
             move = self.nomnom_behaviour(move_list)
+
+        #time.sleep(0.30)
         end_clock = pygame.time.get_ticks()
         self.timer += end_clock - start_clock
-        print("s:[" + str(start_clock) + "]  e:[" + str(end_clock) + "]  T:[" + str(self.timer) + "]")
+        #print("s:[" + str(start_clock) + "]  e:[" + str(end_clock) + "]  T:[" + str(self.timer) + "]")
         return move
 
     def random_behaviour(self, move_list):

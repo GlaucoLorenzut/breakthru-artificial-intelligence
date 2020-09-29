@@ -204,23 +204,76 @@ class Turner():
         self.width = size[0]
         self.height = size[1]
         self.color = color
-        #self.text_size = text_size
+        self.legenda_size = 28
+        self.text_size = 30
         #self.text = text
         self.outline_color = outline_color
 
-    def draw(self):
+    def draw(self, is_gold_turn, time):
         if self.outline_color:
             pygame.draw.rect(self.screen, self.outline_color, (self.x - 2, self.y - 2, self.width + 4, self.height + 4), 0)
 
         pygame.draw.rect(self.screen, self.color, (self.x, self.y, self.width, self.height), 0)
 
-        #if self.text != '':
-        #    font = pygame.font.SysFont(None, self.text_size)
-        #    text = font.render(self.text, 1, (0, 0, 0))
-        #    self.screen.blit(
-        #        text,
-        #        (self.x + (self.width / 2 - text.get_width() / 2), self.y + (self.height / 2 - text.get_height() / 2))
-        #    )
+        # LEGENDA
+        font = pygame.font.SysFont(None, self.legenda_size)
+        legenda = "TURN                         AI TIME"
+        text = font.render(legenda, 1, pygame.Color("white"))
+        self.screen.blit(
+            text,
+            (self.x + 12, self.y - 36)
+        )
+
+        # TURN
+        font = pygame.font.SysFont(None, self.text_size)
+
+        turn_text = "GOLD" if is_gold_turn else "SILVER"
+        turn_color = pygame.Color("yellow") if is_gold_turn else pygame.Color("gray")
+        turn_text = font.render(turn_text, 1, turn_color)
+        self.screen.blit(
+            turn_text,
+            (self.x + 12, self.y + 0.5*(self.height - turn_text.get_height())+1)
+        )
+
+        # DIVIDORY
+        layout_x = self.x + 99
+        pygame.draw.line(self.screen, pygame.Color("white"), (layout_x, self.y),
+                         (layout_x, self.y + self.height), 3)
+
+        # TIME
+        font = pygame.font.SysFont(None, self.text_size)
+        print(time)
+        time_text = self.get_text_time(time)#"99h : 59m : 59s"
+        time_text = font.render(time_text, 1, pygame.Color("white"))
+        self.screen.blit(
+            time_text,
+            (self.x + self.width - time_text.get_width() - 12, self.y + 0.5*(self.height - time_text.get_height())+1)
+        )
+
+    def get_text_time(self, time):
+        if time != None:
+
+            #time = time // 1000
+            hours = time // 3600
+            hours_text = str(hours) if hours >= 10 else "0" + str(hours)
+
+            minutes = (time % 3600) // 60
+            minutes_text = str(minutes) if minutes >= 10 else "0" + str(minutes)
+
+            seconds = time % 60
+            seconds_text = str(seconds) if seconds >= 10 else "0" + str(seconds)
+
+            text = ""
+            if time >= 3600:
+                text += hours_text + "h : "
+            if time >= 60:
+                text += minutes_text + "m : "
+
+            text += seconds_text + "s"
+
+            return text
+        return ""
+
 
 
 
@@ -233,9 +286,27 @@ class Logger():
         self.width = size[0]
         self.height = size[1]
         self.color = color
-        #self.text_size = text_size
-        #self.text = text
+        self.text_list = []
+        self.text_size = 28
+        self.list_size = 12
+        self.text_layout = (x + 10, y + 12)
         self.outline_color = outline_color
+
+    def print_move(self, id, is_gold_turn, type="move"):
+        while len(self.text_list) >= self.list_size:
+            self.text_list.pop(0)
+
+        log_text = "GOLD    " if is_gold_turn else "SILVER  "
+        if type == "move":
+            log_text += "move    [ " + id + " ]"
+        elif type == "undo":
+            log_text += "undo    [ " + id + " ]"
+        elif type == "restore":
+            log_text += "restore [ " + id + " ]"
+        self.text_list.append(log_text)
+
+    def clean_logger(self):
+        self.text_list = []
 
     def draw(self):
         if self.outline_color:
@@ -243,10 +314,16 @@ class Logger():
 
         pygame.draw.rect(self.screen, self.color, (self.x, self.y, self.width, self.height), 0)
 
-        #if self.text != '':
-        #    font = pygame.font.SysFont(None, self.text_size)
-        #    text = font.render(self.text, 1, (0, 0, 0))
-        #    self.screen.blit(
-        #        text,
-        #        (self.x + (self.width / 2 - text.get_width() / 2), self.y + (self.height / 2 - text.get_height() / 2))
-        #    )
+        logger_text = ""
+        for i, text in enumerate(self.text_list):
+
+
+            #print(logger_text)
+            font = pygame.font.SysFont(None, self.text_size)
+            text = font.render(text, 1, pygame.Color("white"))
+            self.screen.blit(
+                text,
+                (self.text_layout[0], self.text_layout[1] + i*(20+8))
+            )
+            #print(text.get_height())
+        #print("\n\n\n\n")
