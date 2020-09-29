@@ -55,7 +55,7 @@ class Breakthru():
 
         self.ai = game_ai.AI(None)
         self.multi_player = True
-        self.AI_turn = True
+        self.AI_turn = None
         self.timer = 0
 
 
@@ -71,11 +71,13 @@ class Breakthru():
     def init_vs_goldAI_game_action(self):
         self.state = "GAME"
         self.multi_player = False
+        self.AI_turn = "G"
         self.ai.behaviour = "THE_RANDOM_GUY"
 
     def init_vs_silverAI_game_action(self):
         self.state = "GAME"
         self.multi_player = False
+        self.AI_turn = "S"
         self.ai.behaviour = "THE_NOMNOM_GUY"
 
     def open_menu_action(self):
@@ -248,7 +250,7 @@ class Breakthru():
         while self.state == "GAME":
             self.draw_game_elements()
 
-            if not self.multi_player and self.AI_turn:
+            if not self.multi_player and self.is_AI_turn():
                 move_ai = self.ai.choose_move(self.game.valid_moves)
                 if move_ai:
                     self.game.make_move(move_ai)
@@ -268,7 +270,7 @@ class Breakthru():
                     self.button_undo_move.check(mouse_pos, self.undo_move_action)
                     self.button_restore_move.check(mouse_pos, self.restore_move_action)
 
-                    if self.multi_player or not self.AI_turn:
+                    if self.multi_player or not self.is_AI_turn():
                         self.make_the_move(mouse_pos)
 
 
@@ -289,7 +291,6 @@ class Breakthru():
 
 
     def make_the_move(self, mouse_pos):
-        start_clock = pygame.time.get_ticks()
         new_location = self.game_gui.get_board_location(mouse_pos)
         if new_location:
             row, col = new_location
@@ -334,11 +335,12 @@ class Breakthru():
             print("\n")
 
 
-
-        end_clock = pygame.time.get_ticks()
-        self.timer += end_clock - start_clock
-        #print(self.timer)
-
+    def is_AI_turn(self):
+        if not self.AI_turn:
+            return False
+        if (self.game.is_gold_turn() and self.AI_turn == "G") or (not self.game.is_gold_turn() and self.AI_turn == "S"):
+            return True
+        return False
 
 
 if __name__ == "__main__":

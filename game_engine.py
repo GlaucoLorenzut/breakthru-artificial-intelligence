@@ -282,6 +282,9 @@ class Move():
     def get_rank_file(self, row, col):
         return self.cols_to_files[col] + self.rows_to_ranks[row]
 
+    def is_capture_move(self):
+        return True if self.piece_captured != "--" else False
+
 
 
 
