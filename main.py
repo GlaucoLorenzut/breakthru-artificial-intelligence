@@ -70,6 +70,7 @@ class Breakthru():
         self.button_load_game    = None
         self.button_undo_move    = None
         self.button_restore_move = None
+        self.button_skip_round   = None
         self.button_quit_game    = None
 
         self.ai = game_ai.AI(None)
@@ -217,8 +218,16 @@ class Breakthru():
                                                GAME_BUTTON_TEXT_SIZE,
                                                "Restore Move")
 
+        self.button_skip_round = game_gui.Button(self.screen,
+                                               game_layout_dx[0] + button_layout_sx_dx[0],
+                                               game_layout_dx[1] + button_layout_vertical + 2*GAME_BUTTON_SIZE[1] + 60,
+                                               GAME_BUTTON_SIZE,
+                                               GAME_BUTTON_COLOR,
+                                               GAME_BUTTON_TEXT_SIZE,
+                                               "Skip First Play")
+
         self.button_quit_game = game_gui.Button(self.screen,
-                                               game_layout_dx[0] - 0.5*GAME_BUTTON_SIZE[0],
+                                               game_layout_dx[0] + button_layout_sx_dx[1],
                                                game_layout_dx[1] + button_layout_vertical + 2*GAME_BUTTON_SIZE[1] + 60,
                                                GAME_BUTTON_SIZE,
                                                GAME_BUTTON_COLOR,
@@ -234,11 +243,14 @@ class Breakthru():
     def draw_game_elements(self):
         self.turner.draw(self.game.is_gold_turn(), self.ai.timer)
         self.logger.draw()
+
         self.button_quit_game.draw()
         self.button_save_game.draw()
         self.button_load_game.draw()
         self.button_undo_move.draw()
         self.button_restore_move.draw()
+        self.button_skip_round.draw(self.game.is_first_move)
+
 
     def menu_screen(self):
         while bkt.state != "GAME":
@@ -293,6 +305,7 @@ class Breakthru():
                 elif event.type == pygame.MOUSEBUTTONDOWN:
                     mouse_pos = pygame.mouse.get_pos()
                     self.button_quit_game.check(mouse_pos, self.open_menu_action)
+                    self.button_skip_round.check(mouse_pos, self.open_menu_action)
                     self.button_save_game.check(mouse_pos, self.save_game_action)
                     self.button_load_game.check(mouse_pos, self.load_game_action)
                     self.button_undo_move.check(mouse_pos, self.undo_move_action)
@@ -304,7 +317,7 @@ class Breakthru():
 
 
             # DRAW BOARD, PATHS AND PIECES
-            self.game_gui.draw_board(self.game.is_first_move)
+            self.game_gui.draw_board()
 
             if len(self.pieces_selected) == 1:
                 r, c = self.pieces_selected[0][0], self.pieces_selected[0][1]

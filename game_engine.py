@@ -293,10 +293,6 @@ class Move():
 
 
 
-
-
-
-
 if __name__ == "__main__":
     number = 9
     board_A = "{:064b}".format(number)

@@ -70,12 +70,9 @@ class GameGui():
         return None
 
 
-    def draw_board(self, test):
+    def draw_board(self):
         pygame.draw.rect(self.screen, pygame.Color("white"), (self.board_layout - 1, self.board_layout - 1, self.board_size + 3, self.board_size + 3), 0)
-        if test:
-            pygame.draw.rect(self.screen, pygame.Color("green"), pygame.Rect(self.board_layout, self.board_layout, self.board_size, self.board_size))
-        else:
-            pygame.draw.rect(self.screen, pygame.Color("blue"), pygame.Rect(self.board_layout, self.board_layout, self.board_size, self.board_size))
+        pygame.draw.rect(self.screen, pygame.Color("blue"), pygame.Rect(self.board_layout, self.board_layout, self.board_size, self.board_size))
 
         lower_inner_board = self.board_layout + 3 * self.square_size - 1
         upper_inner_board = self.board_layout + 8 * self.square_size + 1
@@ -173,22 +170,32 @@ class Button():
         self.text_size = text_size
         self.text = text
         self.outline_color = outline_color
+        self.enabled = True
 
-    def draw(self):
+
+    def draw(self, enabled=True):
+        self.enabled = enabled
+
         if self.outline_color:
             pygame.draw.rect(self.screen, self.outline_color, (self.x - 2, self.y - 2, self.width + 4, self.height + 4), 0)
 
-        pygame.draw.rect(self.screen, self.color, (self.x, self.y, self.width, self.height), 0)
+        color = self.color if self.enabled else (92,83,83)
+        pygame.draw.rect(self.screen, color, (self.x, self.y, self.width, self.height), 0)
 
         if self.text != '':
+            color_text = (0, 0, 0) if self.enabled else (50, 50, 50)
             font = pygame.font.SysFont(None, self.text_size)
-            text = font.render(self.text, 1, (0, 0, 0))
+            text = font.render(self.text, 1, color_text)
             self.screen.blit(
                 text,
                 (self.x + (self.width / 2 - text.get_width() / 2), self.y + (self.height / 2 - text.get_height() / 2))
             )
 
+
     def check(self, pos, action=None):
+        if not self.enabled:
+            return False
+
         if self.x + self.width > pos[0] > self.x and self.y + self.height > pos[1] > self.y:
             pygame.draw.rect(self.screen, pygame.Color("white"), (self.x, self.y, self.width, self.height))
             if action != None:
