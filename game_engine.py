@@ -30,6 +30,7 @@ class GameEngine():
         self.game_log = []
         self.restore_log = []
         self.valid_moves = self.get_all_possible_moves()
+        self.is_first_move = True
 
 
     def is_valid_piece(self, r, c):
@@ -52,6 +53,7 @@ class GameEngine():
 
     def update_turn(self, move):
         self.turn = (self.turn + move.cost) % 4
+        self.is_first_move = False
         #print("( " + str(self.move_cost) + " + "+ str(move.cost) +" )")
         #print(self.turn)
 
@@ -98,12 +100,17 @@ class GameEngine():
             self.board[last_move.start_r][last_move.start_c] = last_move.piece_moved
             self.board[last_move.end_r][last_move.end_c] = last_move.piece_captured
             self.reset_turn(last_move)
-            #TODO undo move logic turn
             self.restore_log.append(last_move)
 
             self.update_all_possible_moves()
-            return last_move.ID
 
+            if len(self.game_log) == 0:
+                self.is_first_move = True
+
+            return last_move.ID
+        else:
+            self.is_first_move = True
+            return None
 
     def restore_move(self):
         if len(self.restore_log) > 0:

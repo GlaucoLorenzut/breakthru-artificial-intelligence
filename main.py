@@ -31,6 +31,8 @@ LOGGER_SIZE = (275, 360)
 LOGGER_COLOR = pygame.Color("blue")
 LOGGER_COLOR_OUTLINE = pygame.Color("white")
 
+ADVANCED_RULES = True
+
 TEST = [
    "move  [ a3-d5 ]",
    "move  [ a3-d5 ]",
@@ -59,6 +61,7 @@ class Breakthru():
         self.game     = None
         self.sq_selected = ()
         self.pieces_selected = []
+        #self.isFirstRound = True
 
         self.button_vs_gold_AI   = None
         self.button_vs_silver_AI = None
@@ -72,7 +75,7 @@ class Breakthru():
         self.ai = game_ai.AI(None)
         self.multi_player = True
         self.AI_turn = None
-        self.timer = 0
+        #self.timer = 0
 
 
     ###################### BUTTON ACTIONS ######################
@@ -301,7 +304,7 @@ class Breakthru():
 
 
             # DRAW BOARD, PATHS AND PIECES
-            self.game_gui.draw_board()
+            self.game_gui.draw_board(self.game.is_first_move)
 
             if len(self.pieces_selected) == 1:
                 r, c = self.pieces_selected[0][0], self.pieces_selected[0][1]

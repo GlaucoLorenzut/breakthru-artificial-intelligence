@@ -51,3 +51,7 @@ class AI():
             return move_list[i]
         else:
             return None
+
+    def evaluation_function(self):
+        pass
+        #TODO check victory - number or pieces for both sides - distance of the vip to the edges - number of legal moves - number of available captures

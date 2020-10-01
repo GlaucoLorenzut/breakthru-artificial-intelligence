@@ -70,9 +70,12 @@ class GameGui():
         return None
 
 
-    def draw_board(self):
+    def draw_board(self, test):
         pygame.draw.rect(self.screen, pygame.Color("white"), (self.board_layout - 1, self.board_layout - 1, self.board_size + 3, self.board_size + 3), 0)
-        pygame.draw.rect(self.screen, pygame.Color("blue"), pygame.Rect(self.board_layout, self.board_layout, self.board_size, self.board_size))
+        if test:
+            pygame.draw.rect(self.screen, pygame.Color("green"), pygame.Rect(self.board_layout, self.board_layout, self.board_size, self.board_size))
+        else:
+            pygame.draw.rect(self.screen, pygame.Color("blue"), pygame.Rect(self.board_layout, self.board_layout, self.board_size, self.board_size))
 
         lower_inner_board = self.board_layout + 3 * self.square_size - 1
         upper_inner_board = self.board_layout + 8 * self.square_size + 1
@@ -293,17 +296,18 @@ class Logger():
         self.outline_color = outline_color
 
     def print_move(self, id, is_gold_turn, type="move"):
-        while len(self.text_list) >= self.list_size:
-            self.text_list.pop(0)
+        if id:
+            while len(self.text_list) >= self.list_size:
+                self.text_list.pop(0)
 
-        log_text = "GOLD    " if is_gold_turn else "SILVER  "
-        if type == "move":
-            log_text += "move    [ " + id + " ]"
-        elif type == "undo":
-            log_text += "undo    [ " + id + " ]"
-        elif type == "restore":
-            log_text += "restore [ " + id + " ]"
-        self.text_list.append(log_text)
+            log_text = "GOLD    " if is_gold_turn else "SILVER  "
+            if type == "move":
+                log_text += "move    [ " + id + " ]"
+            elif type == "undo":
+                log_text += "undo    [ " + id + " ]"
+            elif type == "restore":
+                log_text += "restore [ " + id + " ]"
+            self.text_list.append(log_text)
 
     def clean_logger(self):
         self.text_list = []
