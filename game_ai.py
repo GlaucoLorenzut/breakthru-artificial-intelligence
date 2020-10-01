@@ -18,11 +18,11 @@ class AI():
         start_clock = pygame.time.get_ticks()
         move = None
         if self.behaviour == "THE_ALPHABETA_GUY":
-            move = self.random_behaviour(move_list)
+            move = self.nomnom_behaviour(move_list)
         elif self.behaviour == "THE_NOMNOM_GUY":
             move = self.nomnom_behaviour(move_list)
         elif self.behaviour == "THE_RANDOM_GUY":
-            move = self.nomnom_behaviour(move_list)
+            move = self.random_behaviour(move_list)
 
         #time.sleep(0.30)
         end_clock = pygame.time.get_ticks()

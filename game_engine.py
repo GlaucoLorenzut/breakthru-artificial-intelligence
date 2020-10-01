@@ -24,13 +24,15 @@ class GameEngine():
             ["--", "--", "--", "--", "--", "--", "--", "--", "--", "--", "--"]
         ]
         #self.gold_turn = True
-        self.turn = G_1
         #self.first_move = None
 
+        self.turn = G_1
         self.game_log = []
         self.restore_log = []
-        self.valid_moves = self.get_all_possible_moves()
         self.is_first_move = True
+
+        self.valid_moves = self.get_all_possible_moves()
+
 
 
     def is_valid_piece(self, r, c):
@@ -84,8 +86,9 @@ class GameEngine():
 
 
     def make_move(self, move):
-        self.board[move.start_r][move.start_c] = "--"
-        self.board[move.end_r][move.end_c] = move.piece_moved
+        if move.ID != "skip":
+            self.board[move.start_r][move.start_c] = "--"
+            self.board[move.end_r][move.end_c] = move.piece_moved
         self.game_log.append(move)
         self.update_turn(move)
         self.restore_log = []
@@ -93,12 +96,24 @@ class GameEngine():
         self.update_all_possible_moves()
         return move.ID
 
+    def skip_move(self):
+        skip = Move((1,1),(1,1),self.board)
+        skip.init_skip_move()
+        self.game_log.append(skip)
+        self.update_turn(skip)
+        self.restore_log = []
+
+        self.update_all_possible_moves()
+        return skip.ID
+
 
     def undo_move(self):
         if len(self.game_log) > 0:
             last_move = self.game_log.pop()  # take and remove in one passage
-            self.board[last_move.start_r][last_move.start_c] = last_move.piece_moved
-            self.board[last_move.end_r][last_move.end_c] = last_move.piece_captured
+
+            if last_move.ID != "skip":
+                self.board[last_move.start_r][last_move.start_c] = last_move.piece_moved
+                self.board[last_move.end_r][last_move.end_c] = last_move.piece_captured
             self.reset_turn(last_move)
             self.restore_log.append(last_move)
 
@@ -116,8 +131,9 @@ class GameEngine():
         if len(self.restore_log) > 0:
             restore_move = self.restore_log.pop()  # take and remove in one passage
 
-            self.board[restore_move.start_r][restore_move.start_c] = "--"
-            self.board[restore_move.end_r][restore_move.end_c] = restore_move.piece_moved
+            if restore_move.ID != "skip":
+                self.board[restore_move.start_r][restore_move.start_c] = "--"
+                self.board[restore_move.end_r][restore_move.end_c] = restore_move.piece_moved
             self.update_turn(restore_move)
             self.game_log.append(restore_move)
 
@@ -127,6 +143,11 @@ class GameEngine():
 
     def get_all_possible_moves(self): # not used anymore directly
         moves = []
+
+        if self.is_first_move:
+            skip = Move((1, 1), (1, 1), self.board)
+            skip.init_skip_move()
+            moves.append(skip)
 
         for r in range(len(self.board)):  # number of rows
             for c in range(len(self.board[r])):
@@ -265,6 +286,16 @@ class Move():
         self.piece_captured = board[self.end_r][self.end_c]
         self.cost = 2 if (self.piece_captured != "--" or self.piece_moved == "gF") else 1
         self.ID = self.get_chess_notation()
+
+    def init_skip_move(self): #SKIP MOVE
+        self.start_r        = None
+        self.start_c        = None
+        self.end_r          = None
+        self.end_c          = None
+        self.piece_moved    = "--"
+        self.piece_captured = "--"
+        self.cost = 2
+        self.ID = "skip"
 
 
     def __eq__(self, other): # overriding ==

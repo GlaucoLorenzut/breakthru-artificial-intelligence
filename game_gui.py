@@ -252,7 +252,7 @@ class Turner():
 
         # TIME
         font = pygame.font.SysFont(None, self.text_size)
-        print(time)
+        #print(time)
         time_text = self.get_text_time(time)#"99h : 59m : 59s"
         time_text = font.render(time_text, 1, pygame.Color("white"))
         self.screen.blit(
@@ -314,6 +314,8 @@ class Logger():
                 log_text += "undo    [ " + id + " ]"
             elif type == "restore":
                 log_text += "restore [ " + id + " ]"
+            elif type == "skip":
+                log_text += "move    [ " + id + " ]"
             self.text_list.append(log_text)
 
     def clean_logger(self):

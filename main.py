@@ -92,7 +92,7 @@ class Breakthru():
         self.state = "GAME"
         self.multi_player = False
         self.AI_turn = "G"
-        self.ai.behaviour = "THE_RANDOM_GUY"
+        self.ai.behaviour = "THE_ALPHABETA_GUY"
 
     def init_vs_silverAI_game_action(self):
         self.state = "GAME"
@@ -121,6 +121,14 @@ class Breakthru():
         gold_turn = self.game.is_gold_turn()
         move_id = self.game.restore_move()
         self.logger.print_move(move_id, gold_turn, "restore")
+        self.state = self.game.check_victory()
+        self.sq_selected = ()
+        self.pieces_selected = []
+
+    def skip_move_action(self):
+        gold_turn = self.game.is_gold_turn()
+        move_id = self.game.skip_move()
+        self.logger.print_move(move_id, gold_turn, "skip")
         self.state = self.game.check_victory()
         self.sq_selected = ()
         self.pieces_selected = []
@@ -305,7 +313,7 @@ class Breakthru():
                 elif event.type == pygame.MOUSEBUTTONDOWN:
                     mouse_pos = pygame.mouse.get_pos()
                     self.button_quit_game.check(mouse_pos, self.open_menu_action)
-                    self.button_skip_round.check(mouse_pos, self.open_menu_action)
+                    self.button_skip_round.check(mouse_pos, self.skip_move_action)
                     self.button_save_game.check(mouse_pos, self.save_game_action)
                     self.button_load_game.check(mouse_pos, self.load_game_action)
                     self.button_undo_move.check(mouse_pos, self.undo_move_action)
