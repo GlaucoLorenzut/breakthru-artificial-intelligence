@@ -1,4 +1,5 @@
 import textwrap
+import game_ai
 
 # logic of turn
 G_1 = 0
@@ -9,7 +10,7 @@ S_2 = 3
 class GameEngine():
 
 
-    def __init__(self):
+    def __init__(self, ai_behaviour=None):
         self.board = [
             ["--", "--", "--", "--", "--", "--", "--", "--", "--", "--", "--"],
             ["--", "--", "--", "sS", "sS", "sS", "sS", "sS", "--", "--", "--"],
@@ -30,8 +31,8 @@ class GameEngine():
         self.game_log = []
         self.restore_log = []
         self.is_first_move = True
-
         self.valid_moves = self.get_all_possible_moves()
+        self.ai = game_ai.AI(self.board, ai_behaviour)
 
 
 

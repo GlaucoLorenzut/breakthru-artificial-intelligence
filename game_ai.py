@@ -6,19 +6,25 @@ import pygame
 import game_engine
 import time
 
+INFINITE = 1000000000
 
 class AI():
-    def __init__(self, behaviour):
+
+    def __init__(self, board, behaviour=None):
+        self.board = board
         self.behaviour = behaviour
         self.timer = 0
 
+
+    def init_ai(self, behaviour):
+        self.behaviour = behaviour
 
 
     def choose_move(self, move_list):
         start_clock = pygame.time.get_ticks()
         move = None
         if self.behaviour == "THE_ALPHABETA_GUY":
-            move = self.nomnom_behaviour(move_list)
+            move = self.alphabeta_behaviour(move_list)
         elif self.behaviour == "THE_NOMNOM_GUY":
             move = self.nomnom_behaviour(move_list)
         elif self.behaviour == "THE_RANDOM_GUY":
@@ -30,10 +36,12 @@ class AI():
         #print("s:[" + str(start_clock) + "]  e:[" + str(end_clock) + "]  T:[" + str(self.timer) + "]")
         return move
 
+
     def random_behaviour(self, move_list):
         seed(datetime.now())
         i = randint(0, len(move_list) - 1)
         return move_list[i]
+
 
     def nomnom_behaviour(self, move_list):
         seed(datetime.now())
@@ -51,6 +59,20 @@ class AI():
             return move_list[i]
         else:
             return None
+
+
+    def alphabeta_behaviour(self, move_list):
+        pass
+
+
+    # ciccio = alphabeta(self, state, depth, -INFINITE, INFINITE):
+    def alphabeta(self, state, depth, alpha, beta):
+        pass
+        #if terminal_node or depth == 0:
+        #    return evaluation_fucntion(state)
+        #score = -INFINITE
+        #for
+#
 
     def evaluation_function(self):
         pass

@@ -54,7 +54,7 @@ TEST = [
 class Breakthru():
 
     def __init__(self):
-        self.state    = "GAME"
+        self.state    = "MENU"
         self.screen   =  pygame.display.set_mode((WINDOW_WIDTH, WINDOW_HEIGHT))
         self.clock    =  pygame.time.Clock()
         self.game_gui =  game_gui.GameGui(self.screen, BOARD_SIZE, DIMENSION)
@@ -73,7 +73,7 @@ class Breakthru():
         self.button_skip_round   = None
         self.button_quit_game    = None
 
-        self.ai = game_ai.AI(None)
+        #self.ai = game_ai.AI(None, None)
         self.multi_player = True
         self.AI_turn = None
         #self.timer = 0
@@ -86,19 +86,24 @@ class Breakthru():
 
     def init_multiplayer_game_action(self):
         self.state = "GAME"
+        self.game = game_engine.GameEngine()
         self.multi_player = True
 
     def init_vs_goldAI_game_action(self):
         self.state = "GAME"
         self.multi_player = False
         self.AI_turn = "G"
-        self.ai.behaviour = "THE_ALPHABETA_GUY"
+        self.game = game_engine.GameEngine("THE_RANDOM_GUY")
+        #self.game.ai.board = self.game.board
+        #self.game.ai.init_ai("THE_RANDOM_GUY")
 
     def init_vs_silverAI_game_action(self):
         self.state = "GAME"
         self.multi_player = False
         self.AI_turn = "S"
-        self.ai.behaviour = "THE_NOMNOM_GUY"
+        self.game = game_engine.GameEngine("THE_NOMNOM_GUY")
+        #self.game.ai.board = self.game.board
+        #self.game.ai.init_ai("THE_NOMNOM_GUY")
 
     def open_menu_action(self):
         self.state = "MENU"
@@ -249,7 +254,7 @@ class Breakthru():
         self.button_multi_player.draw()
 
     def draw_game_elements(self):
-        self.turner.draw(self.game.is_gold_turn(), self.ai.timer)
+        self.turner.draw(self.game.is_gold_turn(), self.game.ai.timer)
         self.logger.draw()
 
         self.button_quit_game.draw()
@@ -281,8 +286,6 @@ class Breakthru():
 
 
     def game_screen(self):
-        self.game = game_engine.GameEngine()
-
         self.game_gui.init_board_index()
         self.game_gui.load_images(IMGS_PATH)
 
@@ -297,7 +300,7 @@ class Breakthru():
             self.draw_game_elements()
 
             if not self.multi_player and self.is_AI_turn():
-                move_ai = self.ai.choose_move(self.game.valid_moves)
+                move_ai = self.game.ai.choose_move(self.game.valid_moves)
                 if move_ai:
                     gold_turn = self.game.is_gold_turn()
                     move_id = self.game.make_move(move_ai)
