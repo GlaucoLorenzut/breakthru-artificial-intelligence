@@ -31,8 +31,6 @@ LOGGER_SIZE = (275, 360)
 LOGGER_COLOR = pygame.Color("blue")
 LOGGER_COLOR_OUTLINE = pygame.Color("white")
 
-ADVANCED_RULES = True
-
 TEST = [
    "move  [ a3-d5 ]",
    "move  [ a3-d5 ]",
@@ -50,6 +48,9 @@ TEST = [
    "move  [ a3-d5 ]",
    "move  [ a3-d5 ]"
 ]
+""
+#pyinstaller --noconfirm --onedir --console --add-data "C:/Users/Glauco/Desktop/UNI Maastricht/1_semester/breakthru-artificial-intelligence/images;images/"
+# --hidden-import "ChessEngine" --add-data "C:/Users/luca9/PycharmProjects/BreakthruISG/ChessEngine.py;."  "C:/Users/luca9/PycharmProjects/BreakthruISG/ChessMain.py"
 
 class Breakthru():
 
@@ -93,7 +94,7 @@ class Breakthru():
         self.state = "GAME"
         self.multi_player = False
         self.AI_turn = "G"
-        self.game = game_engine.GameEngine("THE_RANDOM_GUY")
+        self.game = game_engine.GameEngine("THE_NOMNOM_GUY")
         #self.game.ai.board = self.game.board
         #self.game.ai.init_ai("THE_RANDOM_GUY")
 

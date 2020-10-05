@@ -13,6 +13,19 @@ class GameEngine():
     def __init__(self, ai_behaviour=None):
         self.board = [
             ["--", "--", "--", "--", "--", "--", "--", "--", "--", "--", "--"],
+            ["--", "--", "--", "sS", "--", "--", "--", "--", "--", "--", "--"],
+            ["--", "--", "--", "--", "--", "--", "--", "--", "--", "--", "--"],
+            ["--", "--", "--", "--", "gS", "--", "--", "--", "--", "--", "--"],
+            ["--", "--", "--", "--", "--", "--", "--", "--", "--", "--", "--"],
+            ["--", "--", "--", "--", "--", "gF", "--", "--", "--", "--", "--"],
+            ["--", "--", "--", "--", "--", "--", "--", "--", "--", "--", "--"],
+            ["--", "--", "--", "--", "--", "--", "--", "--", "--", "--", "--"],
+            ["--", "--", "--", "--", "--", "--", "--", "--", "--", "--", "--"],
+            ["--", "--", "--", "sS", "--", "--", "--", "--", "--", "--", "--"],
+            ["--", "--", "--", "--", "--", "--", "--", "--", "--", "--", "--"]
+        ]
+        self.board = [
+            ["--", "--", "--", "--", "--", "--", "--", "--", "--", "--", "--"],
             ["--", "--", "--", "sS", "sS", "sS", "sS", "sS", "--", "--", "--"],
             ["--", "--", "--", "--", "--", "--", "--", "--", "--", "--", "--"],
             ["--", "sS", "--", "--", "gS", "gS", "gS", "--", "--", "sS", "--"],
@@ -97,6 +110,7 @@ class GameEngine():
         self.update_all_possible_moves()
         return move.ID
 
+
     def skip_move(self):
         skip = Move((1,1),(1,1),self.board)
         skip.init_skip_move()
@@ -127,6 +141,7 @@ class GameEngine():
         else:
             self.is_first_move = True
             return None
+
 
     def restore_move(self):
         if len(self.restore_log) > 0:
@@ -242,6 +257,7 @@ class GameEngine():
             return "SILVER_WIN"
         return "GAME"
 
+
     def print_board(self):
         string = ""
         for i in range(len(self.board)):
@@ -249,6 +265,7 @@ class GameEngine():
                 string += self.board[i][j] + "  "
             print(string + "\n")
             string = ""
+
 
 
 class Move():
@@ -322,6 +339,9 @@ class Move():
 
     def is_capture_move(self):
         return True if self.piece_captured != "--" else False
+
+    def is_capture_flag(self):
+        return True if self.piece_captured == "gF" else False
 
 
 
