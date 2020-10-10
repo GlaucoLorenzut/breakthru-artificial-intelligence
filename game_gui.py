@@ -263,7 +263,7 @@ class Turner():
     def get_text_time(self, time):
         if time != None:
 
-            #time = time // 1000
+            time = time // 1000
             hours = time // 3600
             hours_text = str(hours) if hours >= 10 else "0" + str(hours)
 

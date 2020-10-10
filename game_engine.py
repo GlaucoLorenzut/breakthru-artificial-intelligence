@@ -2,9 +2,10 @@ import textwrap
 from random import seed
 from random import randint
 from datetime import datetime
+import copy
 import pygame
 
-INFINITE = 1000000000
+INFINITE = 1000000
 
 
 # logic of turn
@@ -120,7 +121,6 @@ class GameEngine():
 
     #active functions
 
-
     def update_turn(self, move):
         self.turn = (self.turn + move.cost) % 4
         self.is_first_move = False
@@ -188,7 +188,7 @@ class GameEngine():
             return restore_move.ID
 
 
-    def get_all_possible_moves(self): # not used anymore directly
+    def get_all_possible_moves(self):
         moves = []
 
         if self.is_first_move:
@@ -207,9 +207,60 @@ class GameEngine():
         self.valid_moves = self.get_all_possible_moves()
 
 
-    def get_piece_moves(self, r, c, moves):
-        if len(self.game_log)>0:
-            fm_r, fm_c = self.game_log[-1].get_end_pos()
+    def get_all_possible_moves_AI(self): # return a dict of all possible moves in one turn
+        move_dict = {}
+
+        if self.is_first_move:
+            skip = Move((1, 1), (1, 1), self.board)
+            skip.init_skip_move()
+            move_dict[skip.ID] = [skip]
+
+        move_list = []
+        for r in range(len(self.board)):  # number of rows
+            for c in range(len(self.board[r])):
+                if self.is_piece_of_right_turn(r, c):
+                    self.get_piece_moves(r, c, move_list)
+
+        for move in move_list:
+            if move.cost == 2:
+                move_dict[move.ID] = [move]
+            else:
+                self.simulate_make_move(move)
+                self.turn += 1
+
+
+                second_move_list = []
+                for r in range(len(self.board)):  # number of rows
+                    for c in range(len(self.board[r])):
+                        if self.is_piece_of_right_turn(r, c):
+                            self.get_piece_moves(r, c, second_move_list, move)
+                for second_move in second_move_list:
+                    move_dict[move.ID + "_" + second_move.ID] = [move, second_move]
+                self.simulate_undo_move(move)
+                self.turn -= 1
+                #self.board = board_backup
+        #asd = len(move_dict)
+        return move_dict
+
+    def simulate_make_move(self, move): #change only the board
+        if move.ID != "skip":
+            self.board[move.start_r][move.start_c] = "--"
+            self.board[move.end_r][move.end_c] = move.piece_moved
+        return move.ID
+
+    def simulate_undo_move(self, last_move):
+        if last_move.ID != "skip":
+            self.board[last_move.start_r][last_move.start_c] = last_move.piece_moved
+            self.board[last_move.end_r][last_move.end_c] = last_move.piece_captured
+
+
+
+    def get_piece_moves(self, r, c, moves, last_move = None):
+        if not last_move and len(self.game_log)>0:
+            last_move = self.game_log[-1]
+        #if len(self.game_log)>0: # check that a single ship does not move twice per turn
+        if last_move:
+            fm_r, fm_c = last_move.get_end_pos()
             if r == fm_r and c == fm_c:
                 return
 
@@ -285,14 +336,19 @@ class GameEngine():
         return "GAME"
 
 
-    def print_board(self):
+    def print_board(self, board = None):
+
+        if not board:
+            board = self.board
+
         string = ""
-        for i in range(len(self.board)):
-            for j in range(len(self.board[i])):
-                string += self.board[i][j] + "  "
+        for i in range(len(board)):
+            for j in range(len(board[i])):
+                string += board[i][j] + "  "
             print(string + "\n")
             string = ""
 
+        print("\n")
 
 ########################################################################################################################
 ########################################################################################################################
@@ -307,7 +363,7 @@ class GameEngine():
         start_clock = pygame.time.get_ticks()
         move = None
         if self.ai_behaviour == "THE_ALPHABETA_GUY":
-            move = self.alphabeta_behaviour(move_list)
+            move = self.alphabeta_behaviour(move_list, 2)
         elif self.ai_behaviour == "THE_NOMNOM_GUY":
             move = self.smart_nomnom_behaviour(move_list)
         elif self.ai_behaviour == "THE_RANDOM_GUY":
@@ -321,7 +377,6 @@ class GameEngine():
 
 
     def random_behaviour(self, move_list):
-        print(self.distance_flag_from_edges())
         seed(datetime.now())
         if len(move_list) != 0:
             i = randint(0, len(move_list) - 1)
@@ -329,9 +384,9 @@ class GameEngine():
         else:
             return None
 
+
     def nomnom_behaviour(self, move_list):
         seed(datetime.now())
-
         nomnom_list = []
         for move in move_list:
             if move.is_capture_move():
@@ -345,6 +400,7 @@ class GameEngine():
             return move_list[i]
         else:
             return None
+
 
     def smart_nomnom_behaviour(self, move_list):
         print(self.evaluation_function(1,1,1))
@@ -372,55 +428,56 @@ class GameEngine():
             return None
 
 
-    def alphabeta_behaviour(self, max_depth):
-        self.max_depth = max_depth
-        self.gold_turn = self.is_gold_turn()
-        self.node_expanded = 0
+    def alphabeta_behaviour(self, move_list, max_depth):
+        max_turn = self.is_gold_turn()
+        backup_board = copy.deepcopy(self.board)
+        node_expanded = 0
 
-        #start_time = time.time()
+        next_move, eval_score = self.alphabeta_method(max_depth, max_turn, -INFINITE, INFINITE, node_expanded)
 
-        print("MINIMAX AB : Wait AI is choosing")
-        list_action = AIElements.get_possible_action(state) #TODO
-        eval_score, selected_key_action = self._alpha_beta(0, state, True, float('-inf'), float('inf'))
-        print("MINIMAX : Done, eval = %d, expanded %d" % (eval_score, self.node_expanded))
-        #print("--- %s seconds ---" % (time.time() - start_time))
-
-        return (selected_key_action,list_action[selected_key_action])
+        #return (selected_key_action, move_list[selected_key_action])
+        self.board = backup_board
+        return next_move, eval_score #move_list[selected_key_action]
 
 
-    def alphabeta(self, current_depth, state, is_max_turn, alpha, beta):
+    def alphabeta_method(self, current_depth, is_max_turn, alpha, beta, node_expanded):
 
-        if current_depth == self.max_depth or state.is_terminal(): #TODO
-            return AIElements.evaluation_function(state, self.gold_turn), "" #TODO
+        if current_depth == 0 or self.check_victory() != "GAME":
+            return None, self.evaluation_function(1, 1, 1) #TODO
 
-        self.node_expanded += 1
+        node_expanded += 1
 
-        possible_action = AIElements.get_possible_action(state) #TODO
-        key_of_actions = list(possible_action.keys()) #TODO
+        possible_move =  self.get_all_possible_moves_AI()
+        #key_of_actions = list(possible_action.keys()) #TODO
 
-        shuffle(key_of_actions) #randomness  #TODO ???
-        best_value = float('-inf') if is_max_turn else float('inf')
-        action_target = ""
-        for action_key in key_of_actions:
-            new_state = AIElements.result_function(state, possible_action[action_key])
+        #shuffle(key_of_actions) #randomness  #TODO ???
+        score = -INFINITE if is_max_turn else INFINITE
+        move_target = None
+        for moves in possible_move.items():
+            for move in moves[1]:
+                self.simulate_make_move(move)
 
-            eval_child, action_child = self._alpha_beta(current_depth+1, new_state, not is_max_turn, alpha, beta)
+            action_child, new_score = self.alphabeta_method(current_depth-1, not is_max_turn, alpha, beta, node_expanded)
+            #print(action_child)
+            #print(new_score)
+            for move in moves[1]:
+                self.simulate_undo_move(move)
 
-            if is_max_turn and best_value < eval_child:
-                best_value = eval_child
-                action_target = action_key
-                alpha = max(alpha, best_value)
-                if beta <= alpha:
+            if is_max_turn and new_score > score:
+                move_target = moves
+                score = new_score
+                alpha = max(alpha, score)
+                if alpha >= beta:
                     break
 
-            elif (not is_max_turn) and best_value > eval_child:
-                best_value = eval_child
-                action_target = action_key
-                beta = min(beta, best_value)
-                if beta <= alpha:
+            elif (not is_max_turn) and new_score < score:
+                move_target = moves
+                score = new_score
+                beta = min(beta, score)
+                if alpha >= beta:
                     break
 
-        return best_value, action_target
+        return move_target, score
 
 
     def evaluation_function(self, A, B, C):
