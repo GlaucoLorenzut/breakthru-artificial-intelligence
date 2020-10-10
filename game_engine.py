@@ -1,5 +1,11 @@
 import textwrap
-import game_ai
+from random import seed
+from random import randint
+from datetime import datetime
+import pygame
+
+INFINITE = 1000000000
+
 
 # logic of turn
 G_1 = 0
@@ -8,7 +14,6 @@ S_1 = 2
 S_2 = 3
 
 class GameEngine():
-
 
     def __init__(self, ai_behaviour=None):
         self.board = [
@@ -37,17 +42,17 @@ class GameEngine():
             ["--", "--", "--", "sS", "sS", "sS", "sS", "sS", "--", "--", "--"],
             ["--", "--", "--", "--", "--", "--", "--", "--", "--", "--", "--"]
         ]
-        #self.gold_turn = True
-        #self.first_move = None
 
         self.turn = G_1
         self.game_log = []
         self.restore_log = []
         self.is_first_move = True
         self.valid_moves = self.get_all_possible_moves()
-        self.ai = game_ai.AI(self.board, ai_behaviour)
+        self.ai_behaviour = ai_behaviour
+        self.ai_timer = 0
 
 
+    # logic functions
 
     def is_valid_piece(self, r, c):
         if self.board[r][c] == "--":
@@ -67,36 +72,62 @@ class GameEngine():
         return False
 
 
+    def has_feasible_cost(self,move):
+        return (move.cost == 1 or self.turn == G_1 or self.turn == S_1)
+
+
+    def is_flag_escaped(self):
+        flagship_escaped = False
+
+        # vertical check
+        for i in range(len(self.board)):
+            if self.board[i][0] == "gF" or self.board[i][len(self.board)-1] == "gF":
+                flagship_escaped = True
+
+        # horizontal check
+        for j in range(len(self.board[0])):
+            if self.board[0][j] == "gF" or self.board[len(self.board[0])-1][j] == "gF":
+                flagship_escaped = True
+
+        return flagship_escaped
+
+
+    def get_number_of_ships(self):
+        n_gold_flag, n_gold_ship, n_silver_ship = 0, 0, 0
+
+        for i in range(len(self.board)):
+            for j in range(len(self.board[0])):
+                if self.board[i][j][0] == "g":
+                    if self.board[i][j][1] == "S":
+                        n_gold_ship += 1
+                    else:
+                        n_gold_flag = 1
+                elif self.board[i][j][0] == "s":
+                    n_silver_ship += 1
+
+        return (n_gold_flag, n_gold_ship, n_silver_ship)
+
+
+    def distance_flag_from_edges(self):
+        for i in range(len(self.board)):
+            for j in range(len(self.board[0])):
+                if self.board[i][j] == "gF":
+                    y = min(i, len(self.board)-i-1)
+                    x = min(j, len(self.board[0]) - j - 1)
+
+        return (x, y)
+
+
+    #active functions
+
+
     def update_turn(self, move):
         self.turn = (self.turn + move.cost) % 4
         self.is_first_move = False
-        #print("( " + str(self.move_cost) + " + "+ str(move.cost) +" )")
-        #print(self.turn)
-
-        #print(str(self.turn) + "\n")
-        #if self.move_cost + move.cost < 2:
-        #    self.move_cost = self.move_cost + move.cost
-        #    self.first_move = move
-        #elif self.move_cost + move.cost == 2:
-        #    self.gold_turn = not self.gold_turn
-        #    self.move_cost = 0
-        #    self.first_move = None
-        #else:
-        #    print("ERROR: too many moves ( " + str(self.move_cost) + " + "+ str(move.cost) +" )")
 
 
     def reset_turn(self, move):
         self.turn = (self.turn - move.cost) % 4
-        #print("( " + str(self.move_cost) + " + "+ str(move.cost) +" )")
-        #if self.move_cost - move.cost < 2:
-        #    self.move_cost = self.move_cost + move.cost
-        #    self.first_move = move
-        #elif self.move_cost + move.cost == 2:
-        #    self.gold_turn = not self.gold_turn
-        #    self.move_cost = 0
-        #    self.first_move = None
-        #else:
-        #    print("ERROR: too many moves ( " + str(self.move_cost) + " + "+ str(move.cost) +" )")
 
 
     def make_move(self, move):
@@ -216,10 +247,6 @@ class GameEngine():
                     moves.append(move)
 
 
-    def has_feasible_cost(self,move):
-        return (move.cost == 1 or self.turn == G_1 or self.turn == S_1)
-
-
     def check_single_piece_moves(self, r, c): #subset of self.valid_moves
         move_list, capture_list = [], []
         for move in self.valid_moves:
@@ -267,6 +294,169 @@ class GameEngine():
             string = ""
 
 
+########################################################################################################################
+########################################################################################################################
+##############################   AI   ##################################################################################
+
+
+    def init_ai(self, behaviour):
+        self.ai_behaviour = behaviour
+
+
+    def ai_choose_move(self, move_list):
+        start_clock = pygame.time.get_ticks()
+        move = None
+        if self.ai_behaviour == "THE_ALPHABETA_GUY":
+            move = self.alphabeta_behaviour(move_list)
+        elif self.ai_behaviour == "THE_NOMNOM_GUY":
+            move = self.smart_nomnom_behaviour(move_list)
+        elif self.ai_behaviour == "THE_RANDOM_GUY":
+            move = self.random_behaviour(move_list)
+
+        #time.sleep(0.30)
+        end_clock = pygame.time.get_ticks()
+        self.ai_timer += end_clock - start_clock
+        #print("s:[" + str(start_clock) + "]  e:[" + str(end_clock) + "]  T:[" + str(self.timer) + "]")
+        return move
+
+
+    def random_behaviour(self, move_list):
+        print(self.distance_flag_from_edges())
+        seed(datetime.now())
+        if len(move_list) != 0:
+            i = randint(0, len(move_list) - 1)
+            return move_list[i]
+        else:
+            return None
+
+    def nomnom_behaviour(self, move_list):
+        seed(datetime.now())
+
+        nomnom_list = []
+        for move in move_list:
+            if move.is_capture_move():
+                nomnom_list.append(move)
+
+        if len(nomnom_list) != 0:
+            i = randint(0, len(nomnom_list) - 1)
+            return nomnom_list[i]
+        elif len(move_list) != 0:
+            i = randint(0, len(move_list) - 1)
+            return move_list[i]
+        else:
+            return None
+
+    def smart_nomnom_behaviour(self, move_list):
+        print(self.evaluation_function(1,1,1))
+        seed(datetime.now())
+
+        nomnom_list = []
+        for move in move_list:
+            if move.is_capture_move():
+                if move.is_capture_flag():
+                    return move
+                nomnom_list.append(move)
+
+        for move in move_list:
+            if move.piece_moved == "gF":
+                if move.end_r == 0 or move.end_r == len(self.board)-1 or move.end_c == 0 or move.end_c == len(self.board[0]) - 1:
+                    return move
+
+        if len(nomnom_list) != 0:
+            i = randint(0, len(nomnom_list) - 1)
+            return nomnom_list[i]
+        elif len(move_list) != 0:
+            i = randint(0, len(move_list) - 1)
+            return move_list[i]
+        else:
+            return None
+
+
+    def alphabeta_behaviour(self, max_depth):
+        self.max_depth = max_depth
+        self.gold_turn = self.is_gold_turn()
+        self.node_expanded = 0
+
+        #start_time = time.time()
+
+        print("MINIMAX AB : Wait AI is choosing")
+        list_action = AIElements.get_possible_action(state) #TODO
+        eval_score, selected_key_action = self._alpha_beta(0, state, True, float('-inf'), float('inf'))
+        print("MINIMAX : Done, eval = %d, expanded %d" % (eval_score, self.node_expanded))
+        #print("--- %s seconds ---" % (time.time() - start_time))
+
+        return (selected_key_action,list_action[selected_key_action])
+
+
+    def alphabeta(self, current_depth, state, is_max_turn, alpha, beta):
+
+        if current_depth == self.max_depth or state.is_terminal(): #TODO
+            return AIElements.evaluation_function(state, self.gold_turn), "" #TODO
+
+        self.node_expanded += 1
+
+        possible_action = AIElements.get_possible_action(state) #TODO
+        key_of_actions = list(possible_action.keys()) #TODO
+
+        shuffle(key_of_actions) #randomness  #TODO ???
+        best_value = float('-inf') if is_max_turn else float('inf')
+        action_target = ""
+        for action_key in key_of_actions:
+            new_state = AIElements.result_function(state, possible_action[action_key])
+
+            eval_child, action_child = self._alpha_beta(current_depth+1, new_state, not is_max_turn, alpha, beta)
+
+            if is_max_turn and best_value < eval_child:
+                best_value = eval_child
+                action_target = action_key
+                alpha = max(alpha, best_value)
+                if beta <= alpha:
+                    break
+
+            elif (not is_max_turn) and best_value > eval_child:
+                best_value = eval_child
+                action_target = action_key
+                beta = min(beta, best_value)
+                if beta <= alpha:
+                    break
+
+        return best_value, action_target
+
+
+    def evaluation_function(self, A, B, C):
+        evaluation = 0
+
+        # check victory
+        if self.is_flag_escaped(): #WIN GOLD
+            return INFINITE
+
+        pieces = self.get_number_of_ships()
+        if pieces[0] == 0: #WIN SILVER
+            return -INFINITE
+
+        # number or pieces for both sides
+        evaluation += A*pieces[1] - B*pieces[2]
+
+        # distance_flag_from_edges
+        distance_flag = self.distance_flag_from_edges()
+        evaluation += C*(5-distance_flag[0]) + C*(5-distance_flag[1])
+
+        # number of legal moves
+        # TODO
+
+        # number of available captures
+        # TODO
+
+        # number of escape ways
+        # TODO
+
+
+        return evaluation
+
+
+##############################   AI   ##################################################################################
+########################################################################################################################
+########################################################################################################################
 
 class Move():
     ranks_to_rows = {
@@ -295,6 +485,7 @@ class Move():
         v : k for k, v in files_to_cols.items()
     }
 
+
     def __init__(self, start_sq, end_sq, board):
         self.start_r = start_sq[0]
         self.start_c = start_sq[1]
@@ -304,6 +495,7 @@ class Move():
         self.piece_captured = board[self.end_r][self.end_c]
         self.cost = 2 if (self.piece_captured != "--" or self.piece_moved == "gF") else 1
         self.ID = self.get_chess_notation()
+
 
     def init_skip_move(self): #SKIP MOVE
         self.start_r        = None
@@ -337,22 +529,10 @@ class Move():
     def get_rank_file(self, row, col):
         return self.cols_to_files[col] + self.rows_to_ranks[row]
 
+
     def is_capture_move(self):
         return True if self.piece_captured != "--" else False
 
+
     def is_capture_flag(self):
         return True if self.piece_captured == "gF" else False
-
-
-
-if __name__ == "__main__":
-    number = 9
-    board_A = "{:064b}".format(number)
-    board_B = "{:064b}".format(0)
-    board = (board_A, board_B)
-
-
-    def print_board(board):
-        print('\n'.join([' '.join(textwrap.wrap(line, 1)) for line in textwrap.wrap(board[0], 11)]))
-
-    print_board(board)

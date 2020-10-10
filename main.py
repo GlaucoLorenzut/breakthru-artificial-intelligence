@@ -4,8 +4,6 @@ import game_engine
 import game_gui
 import janitor as jnt
 from pathlib import Path
-import game_ai
-
 
 IMGS_PATH = "images"
 SAVING_PATH = "saves"
@@ -31,24 +29,6 @@ LOGGER_SIZE = (275, 360)
 LOGGER_COLOR = pygame.Color("blue")
 LOGGER_COLOR_OUTLINE = pygame.Color("white")
 
-TEST = [
-   "move  [ a3-d5 ]",
-   "move  [ a3-d5 ]",
-   "move  [ a3-d5 ]",
-   "move  [ a3-d5 ]",
-   "move  [ a3-d5 ]",
-   "move  [ a3-d5 ]",
-   "move  [ a3-d5 ]",
-   "move  [ a3-d5 ]",
-   "move  [ a3-d5 ]",
-   "move  [ a3-d5 ]",
-   "move  [ a3-d5 ]",
-   "move  [ a3-d5 ]",
-   "move  [ a3-d5 ]",
-   "move  [ a3-d5 ]",
-   "move  [ a3-d5 ]"
-]
-""
 #pyinstaller --noconfirm --onedir --console --add-data "C:/Users/Glauco/Desktop/UNI Maastricht/1_semester/breakthru-artificial-intelligence/images;images/"
 # --hidden-import "ChessEngine" --add-data "C:/Users/luca9/PycharmProjects/BreakthruISG/ChessEngine.py;."  "C:/Users/luca9/PycharmProjects/BreakthruISG/ChessMain.py"
 
@@ -62,7 +42,6 @@ class Breakthru():
         self.game     = None
         self.sq_selected = ()
         self.pieces_selected = []
-        #self.isFirstRound = True
 
         self.button_vs_gold_AI   = None
         self.button_vs_silver_AI = None
@@ -74,11 +53,8 @@ class Breakthru():
         self.button_skip_round   = None
         self.button_quit_game    = None
 
-        #self.ai = game_ai.AI(None, None)
         self.multi_player = True
         self.AI_turn = None
-        #self.timer = 0
-
 
     ###################### BUTTON ACTIONS ######################
     def quit_action(self):
@@ -94,17 +70,13 @@ class Breakthru():
         self.state = "GAME"
         self.multi_player = False
         self.AI_turn = "G"
-        self.game = game_engine.GameEngine("THE_NOMNOM_GUY")
-        #self.game.ai.board = self.game.board
-        #self.game.ai.init_ai("THE_RANDOM_GUY")
+        self.game = game_engine.GameEngine("THE_ALPHABETA_GUY")
 
     def init_vs_silverAI_game_action(self):
         self.state = "GAME"
         self.multi_player = False
         self.AI_turn = "S"
         self.game = game_engine.GameEngine("THE_NOMNOM_GUY")
-        #self.game.ai.board = self.game.board
-        #self.game.ai.init_ai("THE_NOMNOM_GUY")
 
     def open_menu_action(self):
         self.state = "MENU"
@@ -119,7 +91,6 @@ class Breakthru():
         gold_turn = self.game.is_gold_turn()
         move_id = self.game.undo_move()
         self.logger.print_move(move_id, gold_turn, "undo")
-        #self.state = self.game.check_victory()
         self.sq_selected = ()
         self.pieces_selected = []
 
@@ -255,7 +226,7 @@ class Breakthru():
         self.button_multi_player.draw()
 
     def draw_game_elements(self):
-        self.turner.draw(self.game.is_gold_turn(), self.game.ai.timer)
+        self.turner.draw(self.game.is_gold_turn(), self.game.ai_timer)
         self.logger.draw()
 
         self.button_quit_game.draw()
@@ -293,15 +264,12 @@ class Breakthru():
         self.sq_selected = ()
         self.pieces_selected = []
         self.logger.clean_logger()
-        #self.timer = 0
-        #for test in TEST:
-        #    self.logger.print_move(test)
-#
+
         while self.state == "GAME":
             self.draw_game_elements()
 
             if not self.multi_player and self.is_AI_turn():
-                move_ai = self.game.ai.choose_move(self.game.valid_moves)
+                move_ai = self.game.ai_choose_move(self.game.valid_moves)
                 if move_ai:
                     gold_turn = self.game.is_gold_turn()
                     move_id = self.game.make_move(move_ai)
@@ -325,7 +293,6 @@ class Breakthru():
 
                     if self.multi_player or not self.is_AI_turn():
                         self.make_the_move(mouse_pos)
-
 
 
             # DRAW BOARD, PATHS AND PIECES
@@ -379,16 +346,6 @@ class Breakthru():
                 self.sq_selected = ()
                 self.piece_selected = []
 
-            #else:
-            #    pass
-                #self.sq_selected = ()
-                #self.piece_selected = []
-
-            #print(self.sq_selected)
-            #print(new_location)
-            #print(self.pieces_selected)
-            #print("\n")
-
 
     def is_AI_turn(self):
         if not self.AI_turn:
@@ -410,6 +367,3 @@ if __name__ == "__main__":
             bkt.menu_screen()
         elif bkt.state == "GAME":
             bkt.game_screen()
-        #else:
-        #    print("[ERROR]: state is ( " + bkt.state + " )")
-        #    bkt.quit_action()
