@@ -64,9 +64,7 @@ class GameEngine():
     # logic functions
 
     def is_valid_piece(self, r, c):
-        if self.board[r][c] != V:
-            return True
-        return False
+        return bool(self.board[r][c])
 
 
     def is_gold_turn(self):
@@ -323,7 +321,7 @@ class GameEngine():
         move_list, capture_list = [], []
         for move in self.valid_moves:
             if move.start_r == r and move.start_c == c:
-                if move.piece_captured != V:
+                if move.piece_captured:
                     capture_list.append(move)
                 else:
                     move_list.append(move)
@@ -499,34 +497,38 @@ class GameEngine():
 ##############################   AI   ##################################################################################
 ########################################################################################################################
 ########################################################################################################################
+ranks_to_rows = {
+    "1": 10, "2": 9,
+    "3": 8, "4": 7,
+    "5": 6, "6": 5,
+    "7": 4, "8": 3,
+    "9": 2, "10": 1,
+    "11": 0
+}
+
+rows_to_ranks = {
+    v : k for k, v in ranks_to_rows.items()
+}
+
+files_to_cols = {
+    "a": 0, "b": 1,
+    "c": 2, "d": 3,
+    "e": 4, "f": 5,
+    "g": 6, "h": 7,
+    "i": 8, "j": 9,
+    "k": 10
+}
+
+cols_to_files = {
+    0:"a", 1:"b",
+    2:"c", 3:"d",
+    4:"e", 5:"f",
+    6:"g", 7:"h",
+    8:"i", 9:"j",
+    10:"k"
+}
 
 class Move():
-    ranks_to_rows = {
-        "1": 10, "2": 9,
-        "3": 8, "4": 7,
-        "5": 6, "6": 5,
-        "7": 4, "8": 3,
-        "9": 2, "10": 1,
-        "11": 0
-    }
-
-    rows_to_ranks = {
-        v : k for k, v in ranks_to_rows.items()
-    }
-
-    files_to_cols = {
-        "a": 0, "b": 1,
-        "c": 2, "d": 3,
-        "e": 4, "f": 5,
-        "g": 6, "h": 7,
-        "i": 8, "j": 9,
-        "k": 10
-    }
-
-    cols_to_files = {
-        v : k for k, v in files_to_cols.items()
-    }
-
 
     def __init__(self, start_sq, end_sq, board):
         self.start_r = start_sq[0]
@@ -535,7 +537,7 @@ class Move():
         self.end_c = end_sq[1]
         self.piece_moved = board[self.start_r][self.start_c]
         self.piece_captured = board[self.end_r][self.end_c]
-        self.cost = 2 if (self.piece_captured != V or self.piece_moved == F) else 1
+        self.cost = 2 if (self.piece_captured or self.piece_moved == F) else 1
         self.ID = self.get_chess_notation()
 
 
@@ -569,7 +571,7 @@ class Move():
 
 
     def get_rank_file(self, row, col):
-        return self.cols_to_files[col] + self.rows_to_ranks[row]
+        return cols_to_files[col] + rows_to_ranks[row]
 
 
     def is_capture_move(self):
