@@ -57,9 +57,9 @@ class GameGui():
 
 
     def load_images(self, path):
-        pieces = ["sS", "gS", "gF"]
-        for piece in pieces:
-            self.images[piece] = pygame.transform.scale(pygame.image.load(path + "/" + piece + ".png"), (self.square_size, self.square_size))
+        pieces = {2:"sS", 1:"gS", 3:"gF"}
+        for piece, name_file in pieces.items():
+            self.images[piece] = pygame.transform.scale(pygame.image.load(path + "/" + name_file + ".png"), (self.square_size, self.square_size))
 
 
     def get_board_location(self, screen_position):
@@ -95,7 +95,7 @@ class GameGui():
         for r in range(self.dimension):
             for c in range(self.dimension):
                 piece = board[r][c]
-                if piece != "--":
+                if piece != 0:
                     self.screen.blit(self.images[piece], pygame.Rect(self.board_layout + c*self.square_size, self.board_layout + r*self.square_size, self.square_size, self.square_size))
 
 

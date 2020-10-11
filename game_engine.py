@@ -5,16 +5,24 @@ from datetime import datetime
 import copy
 import pygame
 
-INFINITE = 1000000
-
-
 # logic of turn
 G_1 = 0
 G_2 = 1
 S_1 = 2
 S_2 = 3
 
+# logic of pieces
+
+F = 3  # FLAG
+V = 0  # VOID
+G = 1  # GOLD ship
+S = 2  # SILVER ship
+
+INFINITE = 1000000
+
 class GameEngine():
+
+
 
     def __init__(self, ai_behaviour=None):
         self.board = [
@@ -31,17 +39,17 @@ class GameEngine():
             ["--", "--", "--", "--", "--", "--", "--", "--", "--", "--", "--"]
         ]
         self.board = [
-            ["--", "--", "--", "--", "--", "--", "--", "--", "--", "--", "--"],
-            ["--", "--", "--", "sS", "sS", "sS", "sS", "sS", "--", "--", "--"],
-            ["--", "--", "--", "--", "--", "--", "--", "--", "--", "--", "--"],
-            ["--", "sS", "--", "--", "gS", "gS", "gS", "--", "--", "sS", "--"],
-            ["--", "sS", "--", "gS", "--", "--", "--", "gS", "--", "sS", "--"],
-            ["--", "sS", "--", "gS", "--", "gF", "--", "gS", "--", "sS", "--"],
-            ["--", "sS", "--", "gS", "--", "--", "--", "gS", "--", "sS", "--"],
-            ["--", "sS", "--", "--", "gS", "gS", "gS", "--", "--", "sS", "--"],
-            ["--", "--", "--", "--", "--", "--", "--", "--", "--", "--", "--"],
-            ["--", "--", "--", "sS", "sS", "sS", "sS", "sS", "--", "--", "--"],
-            ["--", "--", "--", "--", "--", "--", "--", "--", "--", "--", "--"]
+            [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
+            [0, 0, 0, S, S, S, S, S, 0, 0, 0],
+            [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
+            [0, S, 0, 0, G, G, G, 0, 0, S, 0],
+            [0, S, 0, G, 0, 0, 0, G, 0, S, 0],
+            [0, S, 0, G, 0, F, 0, G, 0, S, 0],
+            [0, S, 0, G, 0, 0, 0, G, 0, S, 0],
+            [0, S, 0, 0, G, G, G, 0, 0, S, 0],
+            [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
+            [0, 0, 0, S, S, S, S, S, 0, 0, 0],
+            [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0]
         ]
 
         self.turn = G_1
@@ -56,10 +64,9 @@ class GameEngine():
     # logic functions
 
     def is_valid_piece(self, r, c):
-        if self.board[r][c] == "--":
-            return False
-        else:
+        if self.board[r][c] != V:
             return True
+        return False
 
 
     def is_gold_turn(self):
@@ -67,8 +74,11 @@ class GameEngine():
 
 
     def is_piece_of_right_turn(self, r, c):
-        piece_color = self.board[r][c][0]
-        if (piece_color == 'g' and self.is_gold_turn()) or (piece_color == 's' and not self.is_gold_turn()):
+        if not self.is_valid_piece(r, c):
+            return False
+        is_gold_turn = self.is_gold_turn()
+        piece_color = self.board[r][c]%2 # pair are silver pieces
+        if (piece_color == 1 and is_gold_turn) or (piece_color == 0 and not is_gold_turn):
             return True
         return False
 
@@ -82,12 +92,12 @@ class GameEngine():
 
         # vertical check
         for i in range(len(self.board)):
-            if self.board[i][0] == "gF" or self.board[i][len(self.board)-1] == "gF":
+            if self.board[i][0] == F or self.board[i][len(self.board)-1] == F:
                 flagship_escaped = True
 
         # horizontal check
         for j in range(len(self.board[0])):
-            if self.board[0][j] == "gF" or self.board[len(self.board[0])-1][j] == "gF":
+            if self.board[0][j] == F or self.board[len(self.board[0])-1][j] == F:
                 flagship_escaped = True
 
         return flagship_escaped
@@ -98,13 +108,12 @@ class GameEngine():
 
         for i in range(len(self.board)):
             for j in range(len(self.board[0])):
-                if self.board[i][j][0] == "g":
-                    if self.board[i][j][1] == "S":
-                        n_gold_ship += 1
-                    else:
-                        n_gold_flag = 1
-                elif self.board[i][j][0] == "s":
+                if self.board[i][j] == G:
+                    n_gold_ship += 1
+                elif self.board[i][j] == S:
                     n_silver_ship += 1
+                elif self.board[i][j] == F:
+                    n_gold_flag = 1
 
         return (n_gold_flag, n_gold_ship, n_silver_ship)
 
@@ -112,7 +121,7 @@ class GameEngine():
     def distance_flag_from_edges(self):
         for i in range(len(self.board)):
             for j in range(len(self.board[0])):
-                if self.board[i][j] == "gF":
+                if self.board[i][j] == F:
                     y = min(i, len(self.board)-i-1)
                     x = min(j, len(self.board[0]) - j - 1)
 
@@ -132,7 +141,7 @@ class GameEngine():
 
     def make_move(self, move):
         if move.ID != "skip":
-            self.board[move.start_r][move.start_c] = "--"
+            self.board[move.start_r][move.start_c] = V
             self.board[move.end_r][move.end_c] = move.piece_moved
         self.game_log.append(move)
         self.update_turn(move)
@@ -179,7 +188,7 @@ class GameEngine():
             restore_move = self.restore_log.pop()  # take and remove in one passage
 
             if restore_move.ID != "skip":
-                self.board[restore_move.start_r][restore_move.start_c] = "--"
+                self.board[restore_move.start_r][restore_move.start_c] = V
                 self.board[restore_move.end_r][restore_move.end_c] = restore_move.piece_moved
             self.update_turn(restore_move)
             self.game_log.append(restore_move)
@@ -254,13 +263,9 @@ class GameEngine():
                 #    if asd
 
 
-
-
-
-
     def simulate_make_move(self, move): #change only the board
         if move.ID != "skip":
-            self.board[move.start_r][move.start_c] = "--"
+            self.board[move.start_r][move.start_c] = V
             self.board[move.end_r][move.end_c] = move.piece_moved
         return move.ID
 
@@ -289,7 +294,7 @@ class GameEngine():
 
                 if 0 <= end_r < len(self.board) and 0 <= end_c < len(self.board):
                     endPiece = self.board[end_r][end_c]
-                    if endPiece == '--':
+                    if endPiece == V:
                         move = Move((r, c), (end_r, end_c), self.board)
                         if self.has_feasible_cost(move):
                             moves.append(move)
@@ -303,13 +308,13 @@ class GameEngine():
             return
 
         directions = ((1, 1), (-1, 1), (1, -1), (-1, -1))
-        enemy_color = 's' if self.is_gold_turn() else 'g'
+        enemy_color = 0 if self.is_gold_turn() else 1 # pair if silver
         for d in directions:
             end_r = r + d[0]
             end_c = c + d[1]
             if 0 <= end_r < len(self.board) and 0 <= end_c < len(self.board):
-                endPiece = self.board[end_r][end_c][0]
-                if endPiece == enemy_color:
+                #endPiece = self.board[end_r][end_c]
+                if self.is_valid_piece(end_r, end_c) and self.board[end_r][end_c]%2 == enemy_color:
                     move = Move((r, c), (end_r, end_c), self.board)
                     moves.append(move)
 
@@ -318,7 +323,7 @@ class GameEngine():
         move_list, capture_list = [], []
         for move in self.valid_moves:
             if move.start_r == r and move.start_c == c:
-                if move.piece_captured != "--":
+                if move.piece_captured != V:
                     capture_list.append(move)
                 else:
                     move_list.append(move)
@@ -331,18 +336,18 @@ class GameEngine():
 
         # vertical check
         for i in range(len(self.board)):
-            if self.board[i][0] == "gF" or self.board[i][len(self.board)-1] == "gF":
+            if self.board[i][0] == F or self.board[i][len(self.board)-1] == F:
                 flagship_escaped = True
 
         # horizontal check
         for j in range(len(self.board[0])):
-            if self.board[0][j] == "gF" or self.board[len(self.board[0])-1][j] == "gF":
+            if self.board[0][j] == F or self.board[len(self.board[0])-1][j] == F:
                 flagship_escaped = True
 
         # kill check
         for i in range(len(self.board)):
             for j in range(len(self.board[i])):
-                if self.board[i][j] == "gF":
+                if self.board[i][j] == F:
                     flagship_killed = False
 
         if flagship_escaped:
@@ -360,7 +365,7 @@ class GameEngine():
         string = ""
         for i in range(len(board)):
             for j in range(len(board[i])):
-                string += board[i][j] + "  "
+                string += str(board[i][j]) + "  "
             print(string + "\n")
             string = ""
 
@@ -400,7 +405,7 @@ class GameEngine():
                 nomnom_list.append(move)
 
         for move in move_list:
-            if move.piece_moved == "gF":
+            if move.piece_moved == F:
                 if move.end_r == 0 or move.end_r == len(self.board)-1 or move.end_c == 0 or move.end_c == len(self.board[0]) - 1:
                     return move
 
@@ -530,7 +535,7 @@ class Move():
         self.end_c = end_sq[1]
         self.piece_moved = board[self.start_r][self.start_c]
         self.piece_captured = board[self.end_r][self.end_c]
-        self.cost = 2 if (self.piece_captured != "--" or self.piece_moved == "gF") else 1
+        self.cost = 2 if (self.piece_captured != V or self.piece_moved == F) else 1
         self.ID = self.get_chess_notation()
 
 
@@ -539,8 +544,8 @@ class Move():
         self.start_c        = None
         self.end_r          = None
         self.end_c          = None
-        self.piece_moved    = "--"
-        self.piece_captured = "--"
+        self.piece_moved    = V
+        self.piece_captured = V
         self.cost = 2
         self.ID = "skip"
 
@@ -568,8 +573,8 @@ class Move():
 
 
     def is_capture_move(self):
-        return True if self.piece_captured != "--" else False
+        return True if self.piece_captured != V else False
 
 
     def is_capture_flag(self):
-        return True if self.piece_captured == "gF" else False
+        return True if self.piece_captured == F else False
