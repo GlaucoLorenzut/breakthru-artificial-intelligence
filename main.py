@@ -76,7 +76,7 @@ class Breakthru():
         self.state = "GAME"
         self.multi_player = False
         self.AI_turn = "S"
-        self.game = game_engine.GameEngine("THE_NOMNOM_GUY")
+        self.game = game_engine.GameEngine("THE_ALPHABETA_GUY")
 
     def open_menu_action(self):
         self.state = "MENU"
@@ -270,8 +270,9 @@ class Breakthru():
 
             if not self.multi_player and self.is_AI_turn():
                 move_ai, score = self.game.ai_choose_move(self.game.valid_moves)
+                print("score: " + str(score))
                 if move_ai:
-                    for move in move_ai[1]:
+                    for move in move_ai:
                         gold_turn = self.game.is_gold_turn()
                         move_id = self.game.make_move(move)
                         self.logger.print_move(move_id, gold_turn)
