@@ -233,7 +233,7 @@ class GameEngine():
                 move_list.append([first_move])
             else:
                 self.simulate_make_move(first_move)
-                self.turn += 1
+                #self.turn += 1
 
                 second_move_list = []
                 for r in range(len(self.board)):  # number of rows
@@ -245,7 +245,7 @@ class GameEngine():
                     move_list.append([first_move, second_move])
 
                 self.simulate_undo_move(first_move)
-                self.turn -= 1
+                #self.turn -= 1
 
         return move_list
 
@@ -265,7 +265,10 @@ class GameEngine():
         if move.ID != "skip":
             self.board[move.start_r][move.start_c] = V
             self.board[move.end_r][move.end_c] = move.piece_moved
+
+        self.update_turn(move)
         return move.ID
+
 
 
     def simulate_undo_move(self, last_move):
@@ -273,6 +276,7 @@ class GameEngine():
             self.board[last_move.start_r][last_move.start_c] = last_move.piece_moved
             self.board[last_move.end_r][last_move.end_c] = last_move.piece_captured
 
+        self.reset_turn(last_move)
 
     def get_piece_moves(self, r, c, moves, last_move = None):
         if not last_move and len(self.game_log)>0:
@@ -382,7 +386,7 @@ class GameEngine():
         start_clock = pygame.time.get_ticks()
         move = None
         #if self.ai_behaviour == "THE_ALPHABETA_GUY":
-        move, score = self.alphabeta_behaviour(move_list, 2)
+        move, score = self.alphabeta_behaviour(move_list, 1)
         #elif self.ai_behaviour == "THE_NOMNOM_GUY":
         #    move = self.smart_nomnom_behaviour(move_list)
 
@@ -481,7 +485,22 @@ class GameEngine():
         #distance_flag = self.distance_flag_from_edges()
         #evaluation += C*(5-distance_flag[0]) + C*(5-distance_flag[1])
 
+
+        whole_list = self.get_all_possible_moves()
+        move_list = []
+        capture_list = []
+        capture_flag_list = []
+        for move in whole_list:
+            if move.is_capture_move():
+                if move.is_capture_flag():
+                    capture_flag_list.append(move)
+                else:
+                    capture_list.append(move)
+            else:
+                move_list.append(move)
+
         # number of legal moves
+        evaluation += len(move_list) + 2*len(capture_list) - 10*len(capture_flag_list)
         # TODO
 
         # number of available captures
