@@ -272,13 +272,13 @@ class Breakthru():
                 move_ai, score = self.game.ai_choose_move(self.game.valid_moves)
                 print("score: " + str(score))
                 if move_ai:
-                    for move in move_ai:
-                        gold_turn = self.game.is_gold_turn()
-                        move_id = self.game.make_move(move)
-                        self.logger.print_move(move_id, gold_turn)
-                        self.state = self.game.check_victory()
-                        self.sq_selected = ()
-                        self.pieces_selected = []
+                    #for move in move_ai:
+                    gold_turn = self.game.is_gold_turn()
+                    move_id = self.game.make_move(move_ai)
+                    self.logger.print_move(move_id, gold_turn)
+                    self.state = self.game.check_victory()
+                    self.sq_selected = ()
+                    self.pieces_selected = []
 
             for event in pygame.event.get():
                 # MOUSE COMMANDS

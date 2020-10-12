@@ -214,70 +214,6 @@ class GameEngine():
         self.valid_moves = self.get_all_possible_moves()
 
 
-    def get_all_possible_moves_AI(self): # return a dict of all possible moves in one turn
-        move_list = []
-
-        if self.is_first_move: # first in the whole game
-            skip = Move((1, 1), (1, 1), self.board)
-            skip.init_skip_move()
-            move_list.append([skip])
-
-        first_move_list = []
-        for r in range(len(self.board)):  # number of rows
-            for c in range(len(self.board[r])):
-                if self.is_piece_of_right_turn(r, c):
-                    self.get_piece_moves(r, c, first_move_list)
-
-        for first_move in first_move_list:
-            if first_move.cost == 2:
-                move_list.append([first_move])
-            else:
-                self.simulate_make_move(first_move)
-                #self.turn += 1
-
-                second_move_list = []
-                for r in range(len(self.board)):  # number of rows
-                    for c in range(len(self.board[r])):
-                        if self.is_piece_of_right_turn(r, c):
-                            self.get_piece_moves(r, c, second_move_list, first_move)
-
-                for second_move in second_move_list:
-                    move_list.append([first_move, second_move])
-
-                self.simulate_undo_move(first_move)
-                #self.turn -= 1
-
-        return move_list
-
-        #for moves in move_list:
-        #    if len(moves) == 2:
-        #        for i, check_moves in enumerate(move_list):
-        #            if len(check_moves) == 2 and (moves[0].ID == check_moves[1].ID and moves[1].ID == check_moves[0].ID):
-        #                move_list.pop(i)
-        #                break
-        #                #print(moves[0].ID + " " + moves[1].ID)
-        #                #print(check_moves[0].ID + " " + check_moves[1].ID)
-                #for smart_moves in smart_move_list:
-                #    if asd
-
-
-    def simulate_make_move(self, move): #change only the board
-        if move.ID != "skip":
-            self.board[move.start_r][move.start_c] = V
-            self.board[move.end_r][move.end_c] = move.piece_moved
-
-        self.update_turn(move)
-        return move.ID
-
-
-
-    def simulate_undo_move(self, last_move):
-        if last_move.ID != "skip":
-            self.board[last_move.start_r][last_move.start_c] = last_move.piece_moved
-            self.board[last_move.end_r][last_move.end_c] = last_move.piece_captured
-
-        self.reset_turn(last_move)
-
     def get_piece_moves(self, r, c, moves, last_move = None):
         if not last_move and len(self.game_log)>0:
             last_move = self.game_log[-1]
@@ -386,7 +322,7 @@ class GameEngine():
         start_clock = pygame.time.get_ticks()
         move = None
         #if self.ai_behaviour == "THE_ALPHABETA_GUY":
-        move, score = self.alphabeta_behaviour(move_list, 1)
+        move, score = self.alphabeta_behaviour(move_list, 3)
         #elif self.ai_behaviour == "THE_NOMNOM_GUY":
         #    move = self.smart_nomnom_behaviour(move_list)
 
@@ -436,35 +372,99 @@ class GameEngine():
             return None, self.evaluation_function(1, 1, 1) #TODO
         #node_number += 1
 
-        possible_moves =  self.get_all_possible_moves_AI()
+        #possible_moves =  self.get_all_possible_moves_AI()
+        possible_moves = self.get_all_possible_moves()
 
         score = -INFINITE if is_max_turn else INFINITE
         move_target = None
-        for moves in possible_moves:
-            for move in moves:
-                self.simulate_make_move(move)
-
+        for move in possible_moves:
+            #for move in moves:
+            #    self.simulate_make_move(move)
+            self.simulate_make_move(move)
             action_child, new_score = self.alphabeta_method(current_depth-1, not is_max_turn, alpha, beta)
             #print(action_child)
             #print(new_score)
-            for move in moves:
-                self.simulate_undo_move(move)
+            #for move in moves:
+            #    self.simulate_undo_move(move)
+            self.simulate_undo_move(move)
 
             if is_max_turn and new_score > score:
-                move_target = moves
+                move_target = move
                 score = new_score
                 alpha = max(alpha, score)
                 if alpha >= beta:
                     break
 
             elif (not is_max_turn) and new_score < score:
-                move_target = moves
+                move_target = move
                 score = new_score
                 beta = min(beta, score)
                 if alpha >= beta:
                     break
 
         return move_target, score
+
+
+    def get_all_possible_moves_AI(self):
+        move_list = []
+
+        if self.is_first_move: # first in the whole game
+            skip = Move((1, 1), (1, 1), self.board)
+            skip.init_skip_move()
+            move_list.append([skip])
+
+        first_move_list = []
+        for r in range(len(self.board)):  # number of rows
+            for c in range(len(self.board[r])):
+                if self.is_piece_of_right_turn(r, c):
+                    self.get_piece_moves(r, c, first_move_list)
+
+        for first_move in first_move_list:
+            if first_move.cost == 2:
+                move_list.append([first_move])
+            else:
+                self.simulate_make_move(first_move)
+                #self.turn += 1
+
+                second_move_list = []
+                for r in range(len(self.board)):  # number of rows
+                    for c in range(len(self.board[r])):
+                        if self.is_piece_of_right_turn(r, c):
+                            self.get_piece_moves(r, c, second_move_list, first_move)
+
+                for second_move in second_move_list:
+                    move_list.append([first_move, second_move])
+
+                self.simulate_undo_move(first_move)
+                #self.turn -= 1
+
+        return move_list
+
+        #for moves in move_list:
+        #    if len(moves) == 2:
+        #        for i, check_moves in enumerate(move_list):
+        #            if len(check_moves) == 2 and (moves[0].ID == check_moves[1].ID and moves[1].ID == check_moves[0].ID):
+        #                move_list.pop(i)
+        #                break
+        #                #print(moves[0].ID + " " + moves[1].ID)
+        #                #print(check_moves[0].ID + " " + check_moves[1].ID)
+                #for smart_moves in smart_move_list:
+                #    if asd
+
+
+    def simulate_make_move(self, move): #change only the board
+        if move.ID != "skip":
+            self.board[move.start_r][move.start_c] = V
+            self.board[move.end_r][move.end_c] = move.piece_moved
+        self.update_turn(move)
+        return move.ID
+
+
+    def simulate_undo_move(self, last_move):
+        if last_move.ID != "skip":
+            self.board[last_move.start_r][last_move.start_c] = last_move.piece_moved
+            self.board[last_move.end_r][last_move.end_c] = last_move.piece_captured
+        self.reset_turn(last_move)
 
 
     def evaluation_function(self, A, B, C):
@@ -511,7 +511,6 @@ class GameEngine():
 
 
         return evaluation
-
 
 ##############################   AI   ##################################################################################
 ########################################################################################################################
