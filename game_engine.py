@@ -51,6 +51,19 @@ class GameEngine():
             [0, 0, 0, S, S, S, S, S, 0, 0, 0],
             [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0]
         ]
+        #self.board = [
+        #    [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
+        #    [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
+        #    [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
+        #    [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
+        #    [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
+        #    [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
+        #    [0, 0, 0, G, F, 0, 0, 0, 0, 0, 0],
+        #    [0, S, 0, S, 0, 0, 0, 0, 0, 0, 0],
+        #    [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
+        #    [0, 0, 0, 0, S, 0, 0, 0, 0, 0, 0],
+        #    [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0]
+        #]
 
         self.turn = G_1
         self.game_log = []
@@ -314,12 +327,8 @@ class GameEngine():
 ##############################   AI   ##################################################################################
 
 
-    def init_ai(self, behaviour):
-        self.ai_behaviour = behaviour
-
-
     def smart_nomnom_behaviour(self, move_list):
-        print(self.evaluation_function(1,1,1))
+       #print(self.evaluation_function(1,1,1))
         seed(datetime.now())
 
         nomnom_list = []
@@ -347,10 +356,12 @@ class GameEngine():
     def ai_choose_move(self, move_list):
         start_clock = pygame.time.get_ticks()
         #if self.ai_behaviour == "THE_ALPHABETA_GUY":
-        move, score = self.alphabeta_behaviour(move_list, 1)
+        move, score = self.alphabeta_behaviour(move_list, 3)
         #elif self.ai_behaviour == "THE_NOMNOM_GUY":
         #    move = self.smart_nomnom_behaviour(move_list)
-        print(move.ID)
+        #print(move.ID)
+        if not move:
+            move = self.smart_nomnom_behaviour(move_list)
         end_clock = pygame.time.get_ticks()
         self.ai_timer += end_clock - start_clock
         return move, score
@@ -377,6 +388,7 @@ class GameEngine():
         score = -INFINITE if is_max_turn else INFINITE
         move_target = None
         for move in next_moves:
+            #print(str(current_depth) + " " + move.ID)
             #for move in moves:
             #    self.simulate_make_move(move)
             self.simulate_make_move(move)
