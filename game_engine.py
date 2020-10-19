@@ -18,7 +18,8 @@ V = 0  # VOID
 G = 1  # GOLD ship
 S = 2  # SILVER ship
 
-INFINITE = 1000000
+AB_WNDW = 100000
+MAX_TIME = 15000 #msec
 
 class GameEngine():
 
@@ -72,6 +73,8 @@ class GameEngine():
         self.valid_moves = self.get_all_possible_moves()
         self.ai_behaviour = ai_behaviour
         self.ai_timer = 0
+        self.ai_time_calculation = 0
+        self.ai_deep = 3
 
 
     # logic functions
@@ -116,6 +119,7 @@ class GameEngine():
 
     def get_number_of_ships(self):
         n_gold_flag, n_gold_ship, n_silver_ship = 0, 0, 0
+        flag_pos = None
 
         for i in range(len(self.board)):
             for j in range(len(self.board[0])):
@@ -125,8 +129,9 @@ class GameEngine():
                     n_silver_ship += 1
                 elif self.board[i][j] == F:
                     n_gold_flag = 1
+                    flag_pos = [i, j]
 
-        return (n_gold_flag, n_gold_ship, n_silver_ship)
+        return (n_gold_flag, n_gold_ship, n_silver_ship), flag_pos
 
 
     def distance_flag_from_edges(self):
@@ -163,7 +168,7 @@ class GameEngine():
 
 
     def skip_move(self):
-        skip = Move((1,1),(1,1),self.board)
+        skip = Move((1, 1), (1, 1), self.board)
         skip.init_skip_move()
         self.game_log.append(skip)
         self.update_turn(skip)
@@ -303,6 +308,7 @@ class GameEngine():
 
         if flagship_escaped:
             return "GOLD_WIN"
+
         if flagship_killed:
             return "SILVER_WIN"
         return "GAME"
@@ -355,15 +361,16 @@ class GameEngine():
 
     def ai_choose_move(self, move_list):
         start_clock = pygame.time.get_ticks()
+        self.ai_time_calculation = pygame.time.get_ticks()
         #if self.ai_behaviour == "THE_ALPHABETA_GUY":
-        move, score = self.alphabeta_behaviour(move_list, 3)
+        move, score = self.alphabeta_behaviour(move_list, self.ai_deep)
         #elif self.ai_behaviour == "THE_NOMNOM_GUY":
         #    move = self.smart_nomnom_behaviour(move_list)
         #print(move.ID)
         if not move:
             move = self.smart_nomnom_behaviour(move_list)
-        end_clock = pygame.time.get_ticks()
-        self.ai_timer += end_clock - start_clock
+
+        self.ai_timer += pygame.time.get_ticks() - start_clock
         return move, score
 
 
@@ -371,23 +378,39 @@ class GameEngine():
         max_turn = self.is_gold_turn()
         #node_number = 0
 
-        next_move, eval_score = self.alphabeta_method(max_depth, max_turn, -INFINITE, INFINITE)
+        next_move, eval_score = self.alphabeta_method(max_depth, max_turn, -AB_WNDW, AB_WNDW)
         #print(eval_score)
         return next_move, eval_score #move_list[selected_key_action]
 
 
     def alphabeta_method(self, current_depth, is_max_turn, alpha, beta):
 
+
+
+        if current_depth == 0 or pygame.time.get_ticks() - self.ai_time_calculation > MAX_TIME or self.check_victory() != "GAME":
+            return None, self.evaluation_function(None, 1, 1, 1) #TODO capire che cazzo crasha a fa
+        #node_number += 1
+
         #possible_moves =  self.get_all_possible_moves_AI()
         next_moves = self.get_all_possible_moves()
 
-        if current_depth == 0 or self.check_victory() != "GAME":
-            return None, self.evaluation_function(next_moves, 1, 1, 1) #TODO capire che cazzo crasha a fa
-        #node_number += 1
-
-        score = -INFINITE if is_max_turn else INFINITE
-        move_target = None
+        #print(pygame.time.get_ticks() - self.ai_time_calculation)
+        score_list = []
         for move in next_moves:
+            self.simulate_make_move(move)
+            score_list.append(self.evaluation_function(move, 1, 1, 1))
+            self.simulate_undo_move(move)
+
+        #score_list = [self.evaluation_function(next_moves, 1, 1, 1) for move in next_moves]
+        sorted_moves = list(zip(next_moves, score_list))
+        sorted_moves.sort(reverse=is_max_turn, key=lambda x: x[1])
+
+
+
+        score = -AB_WNDW if is_max_turn else AB_WNDW
+        move_target = None
+        for move in sorted_moves:
+            move = move[0]
             #print(str(current_depth) + " " + move.ID)
             #for move in moves:
             #    self.simulate_make_move(move)
@@ -406,7 +429,6 @@ class GameEngine():
                 alpha = max(alpha, score)
                 if alpha >= beta:
                     break
-
             elif (not is_max_turn) and new_score < score:
                 move_target = move
                 score = new_score
@@ -479,57 +501,87 @@ class GameEngine():
         self.reset_turn(last_move)
 
 
-    def evaluation_function(self, all_moves, A, B, C):
+    def evaluation_function(self, move, A, B, C):
         evaluation = 0
 
         # check victory
         if self.is_flag_escaped(): #WIN GOLD
-            return INFINITE
+            return AB_WNDW
 
-        pieces = self.get_number_of_ships()
+        pieces, flag_pos = self.get_number_of_ships()
         if pieces[0] == 0: #WIN SILVER
-            return -INFINITE
+            return -AB_WNDW
 
         # number or pieces for both sides
-        evaluation += 5*pieces[1] - 4*pieces[2]
+        evaluation += 5*pieces[1] - 3*pieces[2]
+
+
+        directions = ((1, 1), (-1, 1), (1, -1), (-1, -1))
+        flag_under_attack = 0
+        for d in directions:
+            r = flag_pos[0] + d[0]
+            c = flag_pos[1] + d[1]
+            if self.board[r][c] == S:
+                flag_under_attack += 1
+
+        evaluation += (-200 * flag_under_attack)
+
+        # number of escape ways
+        directions = ((1, 0), (-1, 0), (0, 1), (0, -1))
+        escape_ways = 0
+        for d in directions:
+            for i in range(1, len(self.board)+1):
+                r = flag_pos[0] + d[0] * i
+                c = flag_pos[0] + d[1] * i
+
+                if 0 <= r < len(self.board) and 0 <= c < len(self.board):
+                    next_square = self.board[r][c]
+                    if next_square != V:
+                        break
+                    if r == 0 or r == len(self.board) - 1 or c == 0 or c == len(self.board[0]) - 1:
+                        escape_ways += 1
+
+        evaluation += 500 * escape_ways
+
+
 
         # distance_flag_from_edges
         #distance_flag = self.distance_flag_from_edges()
         #evaluation += C*(5-distance_flag[0]) + C*(5-distance_flag[1])
 
-        move_list = []
-        capture_list = []
-        capture_flag_list = []
-        for move in all_moves:
-            if move.is_capture_move():
-                if move.is_capture_flag():
-                    capture_flag_list.append(move)
-                else:
-                    capture_list.append(move)
-            else:
-                move_list.append(move)
+        #move_list = []
+        #capture_list = []
+        #capture_flag_list = []
+        #for move in all_moves:
+        #    if move.is_capture_move():
+        #        if move.is_capture_flag():
+        #            capture_flag_list.append(move)
+        #        else:
+        #            capture_list.append(move)
+        #    else:
+        #        move_list.append(move)
 
         # number of legal moves and number of available captures
-        evaluation += 0.5*len(move_list) + 1*len(capture_list) - 10*len(capture_flag_list)
+        #evaluation += 0.5*len(move_list) + 1*len(capture_list) - 10*len(capture_flag_list)
 
         # number of flag eaten
-        flag_eaten_counter = 0
-        for move in capture_list:
-            if move.piece_captured == F:
-                evaluation += 1
-        evaluation += (-500*flag_eaten_counter)
-
-        # number of escape ways
-        escape_ways_counter = 0
-        for move in move_list:
-            if move.piece_moved == F:
-                if move.end_r == 0 or move.end_r == len(self.board) - 1 or move.end_c == 0 or move.end_c == len(self.board[0]) - 1:
-                    escape_ways_counter +=1
-
-        if escape_ways_counter == 3 or (escape_ways_counter == 3 and self.turn==S_2):
-            return INFINITE
-
-        evaluation += 50*escape_ways_counter
+        #flag_eaten_counter = 0
+        #for move in capture_list:
+        #    if move.piece_captured == F:
+        #        evaluation += 1
+        #evaluation += (-500*flag_eaten_counter)
+#
+        ## number of escape ways
+        #escape_ways_counter = 0
+        #for move in move_list:
+        #    if move.piece_moved == F:
+        #        if move.end_r == 0 or move.end_r == len(self.board) - 1 or move.end_c == 0 or move.end_c == len(self.board[0]) - 1:
+        #            escape_ways_counter +=1
+#
+        #if escape_ways_counter == 3 or (escape_ways_counter == 3 and self.turn==S_2):
+        #    return AB_WNDW
+#
+        #evaluation += 50*escape_ways_counter
 
         return evaluation
 
@@ -619,3 +671,14 @@ class Move():
 
     def is_capture_flag(self):
         return True if self.piece_captured == F else False
+
+
+#L = [("Alice", 25), ("Bob", 20), ("Alex", 5)]
+#L.sort(key=lambda x: x[1])
+#
+#move_list = ['Megan', 'Harriet', 'Henry', "culo", 'Beth', 'George']
+#score_list = [9, 6, 5, -3, 6, 10]
+#merged_list = list(zip(move_list, score_list))
+#merged_list.sort(reverse = True, key=lambda x: x[1])
+#print(merged_list)
+#print(merged_list)

@@ -317,6 +317,7 @@ class Logger():
             elif type == "skip":
                 log_text += "move    [ " + id + " ]"
             self.text_list.append(log_text)
+            print(log_text)
 
     def clean_logger(self):
         self.text_list = []
