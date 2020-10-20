@@ -1,9 +1,9 @@
-import textwrap
+import pygame
 from random import seed
 from random import randint
 from datetime import datetime
-import copy
-import pygame
+
+
 
 # logic of turn
 G_1 = 0
@@ -12,18 +12,34 @@ S_1 = 2
 S_2 = 3
 
 # logic of pieces
-
 F = 3  # FLAG
 V = 0  # VOID
 G = 1  # GOLD ship
 S = 2  # SILVER ship
 
+ROW_NOTATION = {
+    0: "11", 1: "10",
+    2: "9", 3: "8",
+    4: "7", 5: "6",
+    6: "5", 7: "4",
+    8: "3", 9: "2",
+    10: "1"
+}
+
+COLUMN_ROTATION = {
+    0: "a", 1: "b",
+    2: "c", 3: "d",
+    4: "e", 5: "f",
+    6: "g", 7: "h",
+    8: "i", 9: "j",
+    10: "k"
+}
+
 AB_WNDW = 100000
 MAX_TIME = 5000 #msec
 
+
 class GameEngine():
-
-
 
     def __init__(self, ai_behaviour=None):
         self.board = [
@@ -90,7 +106,9 @@ class GameEngine():
         self.ai_deep = 3
 
 
-    # logic functions
+    ####################################################################################################################
+    ################################################# LOGIC FUNCTIONS ##################################################
+    ####################################################################################################################
 
     def is_valid_piece(self, r, c):
         return bool(self.board[r][c])
@@ -157,7 +175,9 @@ class GameEngine():
         return (x, y)
 
 
-    #active functions
+    ####################################################################################################################
+    ################################################# ACTIVE FUNCTIONS #################################################
+    ####################################################################################################################
 
     def update_turn(self, move):
         self.turn = (self.turn + move.cost) % 4
@@ -282,7 +302,6 @@ class GameEngine():
             end_r = r + d[0]
             end_c = c + d[1]
             if 0 <= end_r < len(self.board) and 0 <= end_c < len(self.board):
-                #endPiece = self.board[end_r][end_c]
                 if self.is_valid_piece(end_r, end_c) and self.board[end_r][end_c]%2 == enemy_color:
                     move = Move((r, c), (end_r, end_c), self.board)
                     moves.append(move)
@@ -328,26 +347,23 @@ class GameEngine():
 
 
     def print_board(self, board = None):
-
         if not board:
             board = self.board
-
         string = ""
         for i in range(len(board)):
             for j in range(len(board[i])):
                 string += str(board[i][j]) + "  "
             print(string + "\n")
             string = ""
-
         print("\n")
 
+
 ########################################################################################################################
+############################################## AI FUNCTIONS ############################################################
 ########################################################################################################################
-##############################   AI   ##################################################################################
 
 
     def smart_nomnom_behaviour(self, move_list):
-       #print(self.evaluation_function(1,1,1))
         seed(datetime.now())
 
         nomnom_list = []
@@ -375,11 +391,7 @@ class GameEngine():
     def ai_choose_move(self, move_list):
         start_clock = pygame.time.get_ticks()
         self.ai_time_calculation = pygame.time.get_ticks()
-        #if self.ai_behaviour == "THE_ALPHABETA_GUY":
         move, score = self.alphabeta_behaviour(move_list, self.ai_deep)
-        #elif self.ai_behaviour == "THE_NOMNOM_GUY":
-        #    move = self.smart_nomnom_behaviour(move_list)
-        #print(move.ID)
         if not move:
             move = self.smart_nomnom_behaviour(move_list)
 
@@ -390,50 +402,33 @@ class GameEngine():
     def alphabeta_behaviour(self, move_list, max_depth):
         max_turn = self.is_gold_turn()
         #node_number = 0
-
         next_move, eval_score = self.alphabeta_method(max_depth, max_turn, -AB_WNDW, AB_WNDW)
-        #print(eval_score)
-        return next_move, eval_score #move_list[selected_key_action]
+        return next_move, eval_score
 
 
     def alphabeta_method(self, current_depth, is_max_turn, alpha, beta):
-
-
-
         if current_depth == 0 or pygame.time.get_ticks() - self.ai_time_calculation > MAX_TIME or self.check_victory() != "GAME":
             return None, self.evaluation_function(None, 1, 1, 1) #TODO capire che cazzo crasha a fa
         #node_number += 1
 
-        #possible_moves =  self.get_all_possible_moves_AI()
         next_moves = self.get_all_possible_moves()
 
-        #print(pygame.time.get_ticks() - self.ai_time_calculation)
         score_list = []
         for move in next_moves:
             self.simulate_make_move(move)
             score_list.append(self.evaluation_function(move, 1, 1, 1))
             self.simulate_undo_move(move)
 
-        #score_list = [self.evaluation_function(next_moves, 1, 1, 1) for move in next_moves]
         sorted_moves = list(zip(next_moves, score_list))
         sorted_moves.sort(reverse=is_max_turn, key=lambda x: x[1])
-
-
 
         score = -AB_WNDW if is_max_turn else AB_WNDW
         move_target = None
         for move in sorted_moves:
             move = move[0]
-            #print(str(current_depth) + " " + move.ID)
-            #for move in moves:
-            #    self.simulate_make_move(move)
             self.simulate_make_move(move)
             max_turn = self.is_gold_turn()
             action_child, new_score = self.alphabeta_method(current_depth-1, max_turn, alpha, beta)
-            #print(action_child)
-            #print(new_score)
-            #for move in moves:
-            #    self.simulate_undo_move(move)
             self.simulate_undo_move(move)
 
             if is_max_turn and new_score > score:
@@ -486,17 +481,6 @@ class GameEngine():
                 #self.turn -= 1
 
         return move_list
-
-        #for moves in move_list:
-        #    if len(moves) == 2:
-        #        for i, check_moves in enumerate(move_list):
-        #            if len(check_moves) == 2 and (moves[0].ID == check_moves[1].ID and moves[1].ID == check_moves[0].ID):
-        #                move_list.pop(i)
-        #                break
-        #                #print(moves[0].ID + " " + moves[1].ID)
-        #                #print(check_moves[0].ID + " " + check_moves[1].ID)
-                #for smart_moves in smart_move_list:
-                #    if asd
 
 
     def simulate_make_move(self, move): #change only the board
@@ -556,8 +540,7 @@ class GameEngine():
 
         evaluation += 500 * escape_ways
 
-
-
+        # TODO CHECK
         # distance_flag_from_edges
         #distance_flag = self.distance_flag_from_edges()
         #evaluation += C*(5-distance_flag[0]) + C*(5-distance_flag[1])
@@ -598,39 +581,7 @@ class GameEngine():
 
         return evaluation
 
-##############################   AI   ##################################################################################
-########################################################################################################################
-########################################################################################################################
-ranks_to_rows = {
-    "1": 10, "2": 9,
-    "3": 8, "4": 7,
-    "5": 6, "6": 5,
-    "7": 4, "8": 3,
-    "9": 2, "10": 1,
-    "11": 0
-}
 
-rows_to_ranks = {
-    v : k for k, v in ranks_to_rows.items()
-}
-
-files_to_cols = {
-    "a": 0, "b": 1,
-    "c": 2, "d": 3,
-    "e": 4, "f": 5,
-    "g": 6, "h": 7,
-    "i": 8, "j": 9,
-    "k": 10
-}
-
-cols_to_files = {
-    0:"a", 1:"b",
-    2:"c", 3:"d",
-    4:"e", 5:"f",
-    6:"g", 7:"h",
-    8:"i", 9:"j",
-    10:"k"
-}
 
 class Move():
 
@@ -675,7 +626,7 @@ class Move():
 
 
     def get_rank_file(self, row, col):
-        return cols_to_files[col] + rows_to_ranks[row]
+        return COLUMN_ROTATION[col] + ROW_NOTATION[row]
 
 
     def is_capture_move(self):
@@ -684,14 +635,3 @@ class Move():
 
     def is_capture_flag(self):
         return True if self.piece_captured == F else False
-
-
-#L = [("Alice", 25), ("Bob", 20), ("Alex", 5)]
-#L.sort(key=lambda x: x[1])
-#
-#move_list = ['Megan', 'Harriet', 'Henry', "culo", 'Beth', 'George']
-#score_list = [9, 6, 5, -3, 6, 10]
-#merged_list = list(zip(move_list, score_list))
-#merged_list.sort(reverse = True, key=lambda x: x[1])
-#print(merged_list)
-#print(merged_list)
