@@ -319,6 +319,13 @@ class Logger():
             self.text_list.append(log_text)
             print(log_text)
 
+    def print_message(self, message):
+        if message:
+            while len(self.text_list) >= self.list_size:
+                self.text_list.pop(0)
+
+            self.text_list.append(message)
+
     def clean_logger(self):
         self.text_list = []
 

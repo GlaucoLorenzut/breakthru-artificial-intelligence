@@ -55,6 +55,7 @@ class Breakthru():
 
         self.multi_player = True
         self.AI_turn = None
+        self.game_pause = False
 
     ###################### BUTTON ACTIONS ######################
     def quit_action(self):
@@ -88,19 +89,28 @@ class Breakthru():
         self.game = jnt.pickle_load(Path(SAVING_PATH) / "save.pickle")
 
     def undo_move_action(self):
-        gold_turn = self.game.is_gold_turn()
         move_id = self.game.undo_move()
+        gold_turn = self.game.is_gold_turn()
         self.logger.print_move(move_id, gold_turn, "undo")
         self.sq_selected = ()
         self.pieces_selected = []
+        if not self.multi_player and move_id:
+            self.game_pause = True
+            self.logger.print_message("[press P to continue]")
+        #print(self.game.turn)
 
     def restore_move_action(self):
         gold_turn = self.game.is_gold_turn()
+
         move_id = self.game.restore_move()
         self.logger.print_move(move_id, gold_turn, "restore")
         self.state = self.game.check_victory()
         self.sq_selected = ()
         self.pieces_selected = []
+        if not self.multi_player and move_id:
+            self.game_pause = True
+            self.logger.print_message("[press P to continue]")
+        #print(self.game.turn)
 
     def skip_move_action(self):
         gold_turn = self.game.is_gold_turn()
@@ -234,7 +244,7 @@ class Breakthru():
         self.button_load_game.draw()
         self.button_undo_move.draw()
         self.button_restore_move.draw()
-        self.button_skip_round.draw(self.game.is_first_move)
+        self.button_skip_round.draw(self.game.is_first_move and (self.multi_player or self.AI_turn=='S'))
 
 
     def menu_screen(self):
@@ -268,7 +278,7 @@ class Breakthru():
         while self.state == "GAME":
             self.draw_game_elements()
 
-            if not self.multi_player and self.is_AI_turn():
+            if not self.multi_player and self.is_AI_turn() and not self.game_pause:
                 move_ai, score = self.game.ai_choose_move(self.game.valid_moves)
                 #print("score: " + str(score))
                 if move_ai:
@@ -295,7 +305,10 @@ class Breakthru():
 
                     if self.multi_player or not self.is_AI_turn():
                         self.make_the_move(mouse_pos)
-
+                # KEYBOARD COMMANDS
+                elif event.type == pygame.KEYDOWN:
+                    if event.key == pygame.K_p:
+                        self.game_pause = False
 
             # DRAW BOARD, PATHS AND PIECES
             self.game_gui.draw_board()
