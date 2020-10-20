@@ -1,6 +1,7 @@
 import pygame
 
 class GameGui():
+
     def __init__(self, screen, board_size, dimension):
         self.screen = screen
         self.board_size = board_size
@@ -8,6 +9,7 @@ class GameGui():
         self.square_size = board_size // dimension
         self.board_layout = self.square_size
         self.images = {}
+
 
     def init_board_index(self):
         index_map = {"A": 0, "B": 1, "C": 2, "D": 3, "E": 4, "F": 5, "G": 6, "H": 7, "I": 8, "J": 9, "K": 10}
@@ -45,7 +47,6 @@ class GameGui():
 
 
     def text_rect(self, text, text_size, position, size, text_color=pygame.Color("white"), color=None):
-
         if color:
             pygame.draw.rect(self.screen, color, pygame.Rect(position[0], position[1], size[0], size[1]))
 
@@ -148,14 +149,6 @@ class GameGui():
             color
         )
 
-        line_length = self.board_layout + self.board_size
-        # rows
-        #pygame.draw.line(self.screen, pygame.Color("white"), (self.board_layout, self.board_layout), (line_length, self.board_layout), 1)
-        #pygame.draw.line(self.screen, pygame.Color("white"), (self.board_layout, line_length), (line_length, line_length), 1)
-        # cols
-        #pygame.draw.line(self.screen, pygame.Color("white"), (self.board_layout, self.board_layout), (self.board_layout, line_length), 1)
-        #pygame.draw.line(self.screen, pygame.Color("white"), (line_length, self.board_layout), (line_length, line_length), 1)
-
 
 
 class Button():
@@ -216,8 +209,8 @@ class Turner():
         self.color = color
         self.legenda_size = 28
         self.text_size = 30
-        #self.text = text
         self.outline_color = outline_color
+
 
     def draw(self, is_gold_turn, time):
         if self.outline_color:
@@ -252,13 +245,13 @@ class Turner():
 
         # TIME
         font = pygame.font.SysFont(None, self.text_size)
-        #print(time)
         time_text = self.get_text_time(time)#"99h : 59m : 59s"
         time_text = font.render(time_text, 1, pygame.Color("white"))
         self.screen.blit(
             time_text,
             (self.x + self.width - time_text.get_width() - 12, self.y + 0.5*(self.height - time_text.get_height())+1)
         )
+
 
     def get_text_time(self, time):
         if time != None:
@@ -286,7 +279,6 @@ class Turner():
 
 
 
-
 class Logger():
 
     def __init__(self, screen, x, y, size, color, outline_color=None):
@@ -301,6 +293,7 @@ class Logger():
         self.list_size = 12
         self.text_layout = (x + 10, y + 12)
         self.outline_color = outline_color
+
 
     def print_move(self, id, is_gold_turn, type="move"):
         if id:
@@ -319,6 +312,7 @@ class Logger():
             self.text_list.append(log_text)
             print(log_text)
 
+
     def print_message(self, message):
         if message:
             while len(self.text_list) >= self.list_size:
@@ -326,8 +320,10 @@ class Logger():
 
             self.text_list.append(message)
 
+
     def clean_logger(self):
         self.text_list = []
+
 
     def draw(self):
         if self.outline_color:
@@ -335,16 +331,10 @@ class Logger():
 
         pygame.draw.rect(self.screen, self.color, (self.x, self.y, self.width, self.height), 0)
 
-        logger_text = ""
         for i, text in enumerate(self.text_list):
-
-
-            #print(logger_text)
             font = pygame.font.SysFont(None, self.text_size)
             text = font.render(text, 1, pygame.Color("white"))
             self.screen.blit(
                 text,
                 (self.text_layout[0], self.text_layout[1] + i*(20+8))
             )
-            #print(text.get_height())
-        #print("\n\n\n\n")
