@@ -97,7 +97,6 @@ class Breakthru():
         if not self.multi_player and move_id:
             self.game_pause = True
             self.logger.print_message("[press P to continue]")
-        #print(self.game.turn)
 
     def restore_move_action(self):
         gold_turn = self.game.is_gold_turn()
@@ -110,7 +109,6 @@ class Breakthru():
         if not self.multi_player and move_id:
             self.game_pause = True
             self.logger.print_message("[press P to continue]")
-        #print(self.game.turn)
 
     def skip_move_action(self):
         gold_turn = self.game.is_gold_turn()
@@ -280,9 +278,8 @@ class Breakthru():
 
             if not self.multi_player and self.is_AI_turn() and not self.game_pause:
                 move_ai, score = self.game.ai_choose_move(self.game.valid_moves)
-                #print("score: " + str(score))
+
                 if move_ai:
-                    #for move in move_ai:
                     gold_turn = self.game.is_gold_turn()
                     move_id = self.game.make_move(move_ai)
                     self.logger.print_move(move_id, gold_turn)
