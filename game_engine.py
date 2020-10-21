@@ -36,7 +36,7 @@ COLUMN_ROTATION = {
 }
 
 AB_WNDW = 100000
-MAX_TIME = 5000 #msec
+MAX_TIME = 1500 #msec
 
 
 class GameEngine():
@@ -190,8 +190,8 @@ class GameEngine():
 
     def make_move_trial(self, move): #change only the board
         if move.ID != "skip":
-            self.board[move.start_r][move.start_c] = V
-            self.board[move.end_r][move.end_c] = move.piece_moved
+            self.board[move.start[0]][move.start[1]] = V
+            self.board[move.end[0]][move.end[1]] = move.piece_moved
         self.update_turn(move)
         return move.ID
 
@@ -219,8 +219,8 @@ class GameEngine():
 
     def undo_move_trial(self, last_move):
         if last_move.ID != "skip":
-            self.board[last_move.start_r][last_move.start_c] = last_move.piece_moved
-            self.board[last_move.end_r][last_move.end_c] = last_move.piece_captured
+            self.board[last_move.start[0]][last_move.start[1]] = last_move.piece_moved
+            self.board[last_move.end[0]][last_move.end[1]] = last_move.piece_captured
         self.reset_turn(last_move)
 
 
@@ -246,8 +246,8 @@ class GameEngine():
             restore_move = self.restore_log.pop()  # take and remove in one passage
 
             if restore_move.ID != "skip":
-                self.board[restore_move.start_r][restore_move.start_c] = V
-                self.board[restore_move.end_r][restore_move.end_c] = restore_move.piece_moved
+                self.board[restore_move.start[0]][restore_move.start[1]] = V
+                self.board[restore_move.end[0]][restore_move.end[1]] = restore_move.piece_moved
             self.update_turn(restore_move)
             self.game_log.append(restore_move)
 
@@ -319,7 +319,7 @@ class GameEngine():
     def check_single_piece_moves(self, r, c): #subset of self.valid_moves
         move_list, capture_list = [], []
         for move in self.valid_moves:
-            if move.start_r == r and move.start_c == c:
+            if move.start[0] == r and move.start[1] == c:
                 if move.piece_captured:
                     capture_list.append(move)
                 else:
@@ -384,7 +384,7 @@ class GameEngine():
 
         for move in move_list:
             if move.piece_moved == F:
-                if move.end_r == 0 or move.end_r == len(self.board)-1 or move.end_c == 0 or move.end_c == len(self.board[0]) - 1:
+                if move.end[0] == 0 or move.end[0] == len(self.board)-1 or move.end[1] == 0 or move.end[1] == len(self.board[0]) - 1:
                     return move
 
         if len(nomnom_list) != 0:
@@ -565,7 +565,7 @@ class GameEngine():
         #escape_ways_counter = 0
         #for move in move_list:
         #    if move.piece_moved == F:
-        #        if move.end_r == 0 or move.end_r == len(self.board) - 1 or move.end_c == 0 or move.end_c == len(self.board[0]) - 1:
+        #        if move.end[0] == 0 or move.end[0] == len(self.board) - 1 or move.end[1] == 0 or move.end[1] == len(self.board[0]) - 1:
         #            escape_ways_counter +=1
 #
         #if escape_ways_counter == 3 or (escape_ways_counter == 3 and self.turn==S_2):
@@ -580,21 +580,17 @@ class GameEngine():
 class Move():
 
     def __init__(self, start_sq, end_sq, board):
-        self.start_r = start_sq[0]
-        self.start_c = start_sq[1]
-        self.end_r = end_sq[0]
-        self.end_c = end_sq[1]
-        self.piece_moved = board[self.start_r][self.start_c]
-        self.piece_captured = board[self.end_r][self.end_c]
+        self.start = start_sq
+        self.end = end_sq
+        self.piece_moved = board[self.start[0]][self.start[1]]
+        self.piece_captured = board[self.end[0]][self.end[1]]
         self.cost = 2 if (self.piece_captured or self.piece_moved == F) else 1
         self.ID = self.get_chess_notation()
 
 
     def init_skip_move(self): #SKIP MOVE
-        self.start_r        = None
-        self.start_c        = None
-        self.end_r          = None
-        self.end_c          = None
+        self.start          = (None, None)
+        self.end            = (None, None)
         self.piece_moved    = V
         self.piece_captured = V
         self.cost = 2
@@ -608,19 +604,15 @@ class Move():
 
 
     def get_start_pos(self):
-        return (self.start_r, self.start_c)
+        return self.start
 
 
     def get_end_pos(self):
-        return (self.end_r, self.end_c)
+        return self.end
 
 
     def get_chess_notation(self):
-        return self.get_rank_file(self.start_r, self.start_c) + "-" +  self.get_rank_file(self.end_r, self.end_c)
-
-
-    def get_rank_file(self, row, col):
-        return COLUMN_ROTATION[col] + ROW_NOTATION[row]
+        return COLUMN_ROTATION[self.start[1]] + ROW_NOTATION[self.start[0]] + "-" + COLUMN_ROTATION[self.end[1]] + ROW_NOTATION[self.end[0]]
 
 
     def is_capture_move(self):

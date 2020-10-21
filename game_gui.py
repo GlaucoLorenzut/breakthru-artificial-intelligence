@@ -104,9 +104,11 @@ class GameGui():
         if right_turn and not (len(move_list)==0 and len(capture_list)==0):
             self.highlight_square(r, c, pygame.Color(50, 170, 80))
             for move in move_list:
-                self.highlight_square(move.end_r, move.end_c, pygame.Color(50, 170, 80))
+                end_r, end_c = move.get_end_pos()
+                self.highlight_square(end_r, end_c, pygame.Color(50, 170, 80))
             for move in capture_list:
-                self.highlight_square(move.end_r, move.end_c, pygame.Color(210, 170, 80))
+                end_r, end_c = move.get_end_pos()
+                self.highlight_square(end_r, end_c, pygame.Color(210, 170, 80))
         else:
             self.highlight_square(r, c, pygame.Color(170, 50, 80))
 
