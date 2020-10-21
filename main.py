@@ -277,7 +277,7 @@ class Breakthru():
             self.draw_game_elements()
 
             if not self.multi_player and self.is_AI_turn() and not self.game_pause:
-                move_ai, score = self.game.ai_choose_move(self.game.valid_moves)
+                move_ai, score = self.game.ai_choose_move()
 
                 if move_ai:
                     gold_turn = self.game.is_gold_turn()

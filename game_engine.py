@@ -36,7 +36,7 @@ COLUMN_ROTATION = {
 }
 
 AB_WNDW = 100000
-MAX_TIME = 1500 #msec
+MAX_TIME = 15000000 #msec
 
 
 class GameEngine():
@@ -103,7 +103,8 @@ class GameEngine():
         self.ai_behaviour = ai_behaviour
         self.ai_timer = 0
         self.ai_time_calculation = 0
-        self.ai_deep = 3
+        self.ai_deep = 4
+        self.node_searched = 0
 
 
     ####################################################################################################################
@@ -372,8 +373,9 @@ class GameEngine():
 ########################################################################################################################
 
 
-    def smart_nomnom_behaviour(self, move_list):
+    def smart_nomnom_behaviour(self):
         seed(datetime.now())
+        move_list = self.valid_moves
 
         nomnom_list = []
         for move in move_list:
@@ -397,28 +399,24 @@ class GameEngine():
             return None
 
 
-    def ai_choose_move(self, move_list):
+    def ai_choose_move(self):
         start_clock = pygame.time.get_ticks()
         self.ai_time_calculation = pygame.time.get_ticks()
-        move, score = self.alphabeta_behaviour(move_list, self.ai_deep)
+        self.node_searched = 0
+
+        move, score = self.alphabeta_method(self.ai_deep, self.is_gold_turn(), -AB_WNDW, AB_WNDW)
         if not move:
-            move = self.smart_nomnom_behaviour(move_list)
+            move = self.smart_nomnom_behaviour()
 
         self.ai_timer += pygame.time.get_ticks() - start_clock
+
+        print("Tot node searched [ " + str(self.node_searched) + " ] in millis [ " + str(self.ai_timer) + " ]")
         return move, score
-
-
-    def alphabeta_behaviour(self, move_list, max_depth):
-        max_turn = self.is_gold_turn()
-        #node_number = 0
-        next_move, eval_score = self.alphabeta_method(max_depth, max_turn, -AB_WNDW, AB_WNDW)
-        return next_move, eval_score
 
 
     def alphabeta_method(self, current_depth, is_max_turn, alpha, beta):
         if current_depth == 0 or pygame.time.get_ticks() - self.ai_time_calculation > MAX_TIME or self.check_victory() != "GAME":
             return None, self.evaluation_function(None, 1, 1, 1) #TODO capire che cazzo crasha a fa
-        #node_number += 1
 
         next_moves = self.get_all_possible_moves()
 
@@ -433,8 +431,10 @@ class GameEngine():
 
         score = -AB_WNDW if is_max_turn else AB_WNDW
         move_target = None
-        for move in sorted_moves:
-            move = move[0]
+        for move, _ in sorted_moves:
+            self.node_searched += 1
+
+            #move = move[0]
             self.make_move_trial(move)
             max_turn = self.is_gold_turn()
             action_child, new_score = self.alphabeta_method(current_depth-1, max_turn, alpha, beta)
