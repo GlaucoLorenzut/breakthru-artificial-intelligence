@@ -188,12 +188,18 @@ class GameEngine():
         self.turn = (self.turn - move.cost) % 4
 
 
-    def make_move(self, move):
+    def make_move_trial(self, move): #change only the board
         if move.ID != "skip":
             self.board[move.start_r][move.start_c] = V
             self.board[move.end_r][move.end_c] = move.piece_moved
-        self.game_log.append(move)
         self.update_turn(move)
+        return move.ID
+
+
+    def make_move(self, move):
+        self.make_move_trial(move)
+
+        self.game_log.append(move)
         self.restore_log = []
 
         self.update_all_possible_moves()
@@ -211,16 +217,19 @@ class GameEngine():
         return skip.ID
 
 
+    def undo_move_trial(self, last_move):
+        if last_move.ID != "skip":
+            self.board[last_move.start_r][last_move.start_c] = last_move.piece_moved
+            self.board[last_move.end_r][last_move.end_c] = last_move.piece_captured
+        self.reset_turn(last_move)
+
+
     def undo_move(self):
         if len(self.game_log) > 0:
             last_move = self.game_log.pop()  # take and remove in one passage
+            self.undo_move_trial(last_move)
 
-            if last_move.ID != "skip":
-                self.board[last_move.start_r][last_move.start_c] = last_move.piece_moved
-                self.board[last_move.end_r][last_move.end_c] = last_move.piece_captured
-            self.reset_turn(last_move)
             self.restore_log.append(last_move)
-
             self.update_all_possible_moves()
 
             if len(self.game_log) == 0:
@@ -415,9 +424,9 @@ class GameEngine():
 
         score_list = []
         for move in next_moves:
-            self.simulate_make_move(move)
+            self.make_move_trial(move)
             score_list.append(self.evaluation_function(move, 1, 1, 1))
-            self.simulate_undo_move(move)
+            self.undo_move_trial(move)
 
         sorted_moves = list(zip(next_moves, score_list))
         sorted_moves.sort(reverse=is_max_turn, key=lambda x: x[1])
@@ -426,10 +435,10 @@ class GameEngine():
         move_target = None
         for move in sorted_moves:
             move = move[0]
-            self.simulate_make_move(move)
+            self.make_move_trial(move)
             max_turn = self.is_gold_turn()
             action_child, new_score = self.alphabeta_method(current_depth-1, max_turn, alpha, beta)
-            self.simulate_undo_move(move)
+            self.undo_move_trial(move)
 
             if is_max_turn and new_score > score:
                 move_target = move
@@ -465,7 +474,7 @@ class GameEngine():
             if first_move.cost == 2:
                 move_list.append([first_move])
             else:
-                self.simulate_make_move(first_move)
+                self.make_move_trial(first_move)
                 #self.turn += 1
 
                 second_move_list = []
@@ -477,25 +486,10 @@ class GameEngine():
                 for second_move in second_move_list:
                     move_list.append([first_move, second_move])
 
-                self.simulate_undo_move(first_move)
+                self.undo_move_trial(first_move)
                 #self.turn -= 1
 
         return move_list
-
-
-    def simulate_make_move(self, move): #change only the board
-        if move.ID != "skip":
-            self.board[move.start_r][move.start_c] = V
-            self.board[move.end_r][move.end_c] = move.piece_moved
-        self.update_turn(move)
-        return move.ID
-
-
-    def simulate_undo_move(self, last_move):
-        if last_move.ID != "skip":
-            self.board[last_move.start_r][last_move.start_c] = last_move.piece_moved
-            self.board[last_move.end_r][last_move.end_c] = last_move.piece_captured
-        self.reset_turn(last_move)
 
 
     def evaluation_function(self, move, A, B, C):
