@@ -247,8 +247,6 @@ class Breakthru():
 
     def menu_screen(self):
         while bkt.state != "GAME":
-            self.draw_menu_elements()
-
             for event in pygame.event.get():
                 # MOUSE COMMANDS
                 if event.type == pygame.QUIT:
@@ -259,6 +257,7 @@ class Breakthru():
                     self.button_vs_silver_AI.check(mouse_pos, self.init_vs_silverAI_game_action)
                     self.button_multi_player.check(mouse_pos, self.init_multiplayer_game_action)
 
+            self.draw_menu_elements()
             self.game_gui.draw_game_result(self.state)
 
             self.clock.tick(MAX_FPS)
@@ -274,7 +273,7 @@ class Breakthru():
         self.logger.clean_logger()
 
         while self.state == "GAME":
-            self.draw_game_elements()
+            #self.draw_game_elements()
 
             if not self.multi_player and self.is_AI_turn() and not self.game_pause:
                 move_ai, score = self.game.ai_choose_move()
@@ -317,7 +316,7 @@ class Breakthru():
                 self.game_gui.draw_highlighted_paths(r, c, right_turn, move_list, capture_list)
 
             self.game_gui.draw_pieces(self.game.board)
-
+            self.draw_game_elements()
             self.clock.tick(MAX_FPS)
             pygame.display.update()
 

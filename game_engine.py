@@ -12,10 +12,11 @@ S_1 = 2
 S_2 = 3
 
 # logic of pieces
-F = 3  # FLAG
+
 V = 0  # VOID
 G = 1  # GOLD ship
 S = 2  # SILVER ship
+F = 3  # FLAG
 
 ROW_NOTATION = {
     0: "11", 1: "10",
@@ -36,8 +37,8 @@ COLUMN_ROTATION = {
 }
 
 AB_WNDW = 100000
-MAX_TIME = 15000000 #msec
-
+MAX_TIME = 1500000 #msec
+RANDOM_MATRIX = [[[randint(0, 2**64 - 1) for i in range(3)] for j in range(11)] for k in range(11)] # TODO 0 or 1
 
 class GameEngine():
 
@@ -105,6 +106,7 @@ class GameEngine():
         self.ai_time_calculation = 0
         self.ai_deep = 4
         self.node_searched = 0
+        self.transposition_table = {}
 
 
     ####################################################################################################################
@@ -436,6 +438,7 @@ class GameEngine():
 
             #move = move[0]
             self.make_move_trial(move)
+            self.get_zoobrist_hash()
             max_turn = self.is_gold_turn()
             action_child, new_score = self.alphabeta_method(current_depth-1, max_turn, alpha, beta)
             self.undo_move_trial(move)
@@ -574,6 +577,19 @@ class GameEngine():
         #evaluation += 50*escape_ways_counter
 
         return evaluation
+
+########################################################################################################################
+############################################## TRANSPOSITION TABLE #####################################################
+########################################################################################################################
+
+    def get_zoobrist_hash(self):
+        hash = 0
+        for i in range(len(self.board)):
+            for j in range(len(self.board[0])):
+                if self.board[i][j]:
+                    piece_map = self.board[i][j] - 1
+                    hash ^= RANDOM_MATRIX[i][j][piece_map]
+        return hash
 
 
 
