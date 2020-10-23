@@ -37,7 +37,7 @@ COLUMN_ROTATION = {
 }
 
 AB_WNDW = 100000
-MAX_TIME = 1500000 #msec
+MAX_TIME = 150000 #msec
 RANDOM_MATRIX = [[[randint(0, 2**64 - 1) for i in range(3)] for j in range(11)] for k in range(11)] # TODO 0 or 1
 
 class GameEngine():
@@ -82,19 +82,19 @@ class GameEngine():
         #    [0, 0, 0, 0, S, 0, 0, 0, 0, 0, 0],
         #    [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0]
         #]
-        #self.board = [
-        #    [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
-        #    [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
-        #    [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
-        #    [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
-        #    [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
-        #    [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
-        #    [0, 0, 0, 0, F, 0, 0, 0, 0, 0, 0],
-        #    [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
-        #    [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
-        #    [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
-        #    [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0]
-        #]
+        self.board = [
+            [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
+            [0, 0, 0, 0, F, 0, 0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0]
+        ]
 
         self.turn = G_1
         self.game_log = []
@@ -438,7 +438,7 @@ class GameEngine():
 
             #move = move[0]
             self.make_move_trial(move)
-            self.get_zoobrist_hash()
+            #self.get_zoobrist_hash()
             max_turn = self.is_gold_turn()
             action_child, new_score = self.alphabeta_method(current_depth-1, max_turn, alpha, beta)
             self.undo_move_trial(move)
@@ -457,42 +457,6 @@ class GameEngine():
                     break
 
         return move_target, score
-
-
-    def get_all_possible_moves_AI(self):
-        move_list = []
-
-        if self.is_first_move: # first in the whole game
-            skip = Move((1, 1), (1, 1), self.board)
-            skip.init_skip_move()
-            move_list.append([skip])
-
-        first_move_list = []
-        for r in range(len(self.board)):  # number of rows
-            for c in range(len(self.board[r])):
-                if self.is_piece_of_right_turn(r, c):
-                    self.get_piece_moves(r, c, first_move_list)
-
-        for first_move in first_move_list:
-            if first_move.cost == 2:
-                move_list.append([first_move])
-            else:
-                self.make_move_trial(first_move)
-                #self.turn += 1
-
-                second_move_list = []
-                for r in range(len(self.board)):  # number of rows
-                    for c in range(len(self.board[r])):
-                        if self.is_piece_of_right_turn(r, c):
-                            self.get_piece_moves(r, c, second_move_list, first_move)
-
-                for second_move in second_move_list:
-                    move_list.append([first_move, second_move])
-
-                self.undo_move_trial(first_move)
-                #self.turn -= 1
-
-        return move_list
 
 
     def evaluation_function(self, move, A, B, C):

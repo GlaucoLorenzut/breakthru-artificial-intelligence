@@ -3,3 +3,7 @@
 __pycache__
 saves
 main
+build
+dist
+test.py
+*.spec
