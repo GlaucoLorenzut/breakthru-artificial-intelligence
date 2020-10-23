@@ -82,19 +82,19 @@ class GameEngine():
         #    [0, 0, 0, 0, S, 0, 0, 0, 0, 0, 0],
         #    [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0]
         #]
-        self.board = [
-            [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
-            [0, 0, 0, 0, F, 0, 0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0]
-        ]
+        #self.board = [
+        #    [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
+        #    [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
+        #    [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
+        #    [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
+        #    [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
+        #    [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
+        #    [0, 0, 0, 0, F, 0, 0, 0, 0, 0, 0],
+        #    [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
+        #    [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
+        #    [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
+        #    [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0]
+        #]
 
         self.turn = G_1
         self.game_log = []
@@ -104,7 +104,7 @@ class GameEngine():
         self.ai_behaviour = ai_behaviour
         self.ai_timer = 0
         self.ai_time_calculation = 0
-        self.ai_deep = 4
+        self.ai_deep = 3
         self.node_searched = 0
         self.transposition_table = {}
 
@@ -289,7 +289,7 @@ class GameEngine():
         # moves
         directions = ((1, 0), (-1, 0), (0, 1), (0, -1))
         for d in directions:
-            for i in range(1, len(self.board)+1):
+            for i in range(1, len(self.board)):
                 end_r = r + d[0] * i
                 end_c = c + d[1] * i
 
@@ -406,7 +406,7 @@ class GameEngine():
         self.ai_time_calculation = pygame.time.get_ticks()
         self.node_searched = 0
 
-        move, score = self.alphabeta_method(self.ai_deep, self.is_gold_turn(), -AB_WNDW, AB_WNDW)
+        move, score = self.alphabeta_minimax_method(self.ai_deep, self.is_gold_turn(), -AB_WNDW, AB_WNDW)
         if not move:
             move = self.smart_nomnom_behaviour()
 
@@ -416,7 +416,7 @@ class GameEngine():
         return move, score
 
 
-    def alphabeta_method(self, current_depth, is_max_turn, alpha, beta):
+    def alphabeta_minimax_method(self, current_depth, is_max_turn, alpha, beta):
         if current_depth == 0 or pygame.time.get_ticks() - self.ai_time_calculation > MAX_TIME or self.check_victory() != "GAME":
             return None, self.evaluation_function(None, 1, 1, 1) #TODO capire che cazzo crasha a fa
 
@@ -440,7 +440,7 @@ class GameEngine():
             self.make_move_trial(move)
             #self.get_zoobrist_hash()
             max_turn = self.is_gold_turn()
-            action_child, new_score = self.alphabeta_method(current_depth-1, max_turn, alpha, beta)
+            action_child, new_score = self.alphabeta_minimax_method(current_depth-1, max_turn, alpha, beta)
             self.undo_move_trial(move)
 
             if is_max_turn and new_score > score:
@@ -488,9 +488,9 @@ class GameEngine():
         directions = ((1, 0), (-1, 0), (0, 1), (0, -1))
         escape_ways = 0
         for d in directions:
-            for i in range(1, len(self.board)+1):
+            for i in range(1, len(self.board)):
                 r = flag_pos[0] + d[0] * i
-                c = flag_pos[0] + d[1] * i
+                c = flag_pos[1] + d[1] * i
 
                 if 0 <= r < len(self.board) and 0 <= c < len(self.board):
                     next_square = self.board[r][c]
@@ -498,8 +498,9 @@ class GameEngine():
                         break
                     if r == 0 or r == len(self.board) - 1 or c == 0 or c == len(self.board[0]) - 1:
                         escape_ways += 1
+                        break
 
-        evaluation += 500 * escape_ways
+        evaluation += 200 * escape_ways
 
         # TODO CHECK
         # distance_flag_from_edges
