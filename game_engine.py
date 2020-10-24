@@ -37,7 +37,7 @@ COLUMN_ROTATION = {
 }
 
 AB_WNDW = 100000
-MAX_TIME = 15000 #msec
+MAX_TIME = 60000 #msec
 RANDOM_MATRIX = [[[randint(0, 2**64 - 1) for i in range(3)] for j in range(11)] for k in range(11)] # TODO 0 or 1
 
 class GameEngine():
@@ -378,23 +378,23 @@ class GameEngine():
     def alphabeta_minimax_method(self, current_depth, is_max_turn, alpha, beta):
         self.node_searched += 1
 
-        if current_depth == 0 or pygame.time.get_ticks() - self.ai_time_calculation > MAX_TIME or self.check_victory() != "GAME":
-            return None, self.evaluation_function(None, 1, 1, 1) #TODO capire che cazzo crasha a fa
+        game_status = self.check_victory()
+        if current_depth == 0 or pygame.time.get_ticks() - self.ai_time_calculation > MAX_TIME or game_status != "GAME":
+            return None, self.evaluation_function(game_status)
 
         next_moves = self.get_all_possible_moves()
 
-        score_list = []
-        for move in next_moves:
-            self.make_move_trial(move)
-            score_list.append(self.evaluation_function(move, 1, 1, 1))
-            self.undo_move_trial(move)
-
-        sorted_moves = list(zip(next_moves, score_list))
-        sorted_moves.sort(reverse=is_max_turn, key=lambda x: x[1])
+        #score_list = []
+        #for move in next_moves:
+        #    self.make_move_trial(move)
+        #    score_list.append(self.evaluation_function())
+        #    self.undo_move_trial(move)#
+        #sorted_moves = list(zip(next_moves, score_list))
+        #sorted_moves.sort(reverse=is_max_turn, key=lambda x: x[1])
 
         best_score = -AB_WNDW-1 if is_max_turn else AB_WNDW+1
         move_target = None
-        for move, _ in sorted_moves:
+        for move in next_moves:
             self.make_move_trial(move) # updates also the turn
             #self.get_zoobrist_hash()
             max_turn = self.is_gold_turn()
@@ -419,17 +419,25 @@ class GameEngine():
         return move_target, best_score
 
 
-    def evaluation_function(self, move, A, B, C):
+    def evaluation_function(self, status):
         evaluation = 0
 
-        # check victory
-        if self.is_flag_escaped(): #WIN GOLD
-            return AB_WNDW
-
         pieces, flag_pos = self.get_number_of_ships()
-        if pieces[0] == 0: #WIN SILVER
-            return -AB_WNDW
 
+        #if status:
+        if status == "GOLD_WIN":
+            return AB_WNDW
+        elif status == "SILVER_WIN":
+            return -AB_WNDW
+        #else:
+        #    # check victory
+        #    if self.is_flag_escaped(): #WIN GOLD
+        #        return AB_WNDW
+#
+        #    #print(pieces[0])
+        #    if pieces[0] == 0: #WIN SILVER
+        #        return -AB_WNDW
+#
         # number or pieces for both sides
         evaluation += 5*pieces[1] - 3*pieces[2]
 

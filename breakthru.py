@@ -29,8 +29,7 @@ LOGGER_SIZE = (275, 360)
 LOGGER_COLOR = pygame.Color("blue")
 LOGGER_COLOR_OUTLINE = pygame.Color("white")
 
-#pyinstaller --noconfirm --onedir --console --add-data "C:/Users/Glauco/Desktop/UNI Maastricht/1_semester/breakthru-artificial-intelligence/images;images/"
-# --hidden-import "ChessEngine" --add-data "C:/Users/luca9/PycharmProjects/BreakthruISG/ChessEngine.py;."  "C:/Users/luca9/PycharmProjects/BreakthruISG/ChessMain.py"
+
 
 class Breakthru():
 
