@@ -37,25 +37,13 @@ COLUMN_ROTATION = {
 }
 
 AB_WNDW = 100000
-MAX_TIME = 150000 #msec
+MAX_TIME = 15000 #msec
 RANDOM_MATRIX = [[[randint(0, 2**64 - 1) for i in range(3)] for j in range(11)] for k in range(11)] # TODO 0 or 1
 
 class GameEngine():
 
     def __init__(self, ai_behaviour=None):
-        self.board = [
-            ["--", "--", "--", "--", "--", "--", "--", "--", "--", "--", "--"],
-            ["--", "--", "--", "sS", "--", "--", "--", "--", "--", "--", "--"],
-            ["--", "--", "--", "--", "--", "--", "--", "--", "--", "--", "--"],
-            ["--", "--", "--", "--", "gS", "--", "--", "--", "--", "--", "--"],
-            ["--", "--", "--", "--", "--", "--", "--", "--", "--", "--", "--"],
-            ["--", "--", "--", "--", "--", "gF", "--", "--", "--", "--", "--"],
-            ["--", "--", "--", "--", "--", "--", "--", "--", "--", "--", "--"],
-            ["--", "--", "--", "--", "--", "--", "--", "--", "--", "--", "--"],
-            ["--", "--", "--", "--", "--", "--", "--", "--", "--", "--", "--"],
-            ["--", "--", "--", "sS", "--", "--", "--", "--", "--", "--", "--"],
-            ["--", "--", "--", "--", "--", "--", "--", "--", "--", "--", "--"]
-        ]
+
         self.board = [
             [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
             [0, 0, 0, S, S, S, S, S, 0, 0, 0],
@@ -412,11 +400,13 @@ class GameEngine():
 
         self.ai_timer += pygame.time.get_ticks() - start_clock
 
-        print("Tot node searched [ " + str(self.node_searched) + " ] in millis [ " + str(self.ai_timer) + " ]")
+        print("Tot node searched [ " + str(self.node_searched) + " ] in millis [ " + str(pygame.time.get_ticks() - start_clock) + " ]")
         return move, score
 
 
     def alphabeta_minimax_method(self, current_depth, is_max_turn, alpha, beta):
+        self.node_searched += 1
+
         if current_depth == 0 or pygame.time.get_ticks() - self.ai_time_calculation > MAX_TIME or self.check_victory() != "GAME":
             return None, self.evaluation_function(None, 1, 1, 1) #TODO capire che cazzo crasha a fa
 
@@ -431,32 +421,31 @@ class GameEngine():
         sorted_moves = list(zip(next_moves, score_list))
         sorted_moves.sort(reverse=is_max_turn, key=lambda x: x[1])
 
-        score = -AB_WNDW if is_max_turn else AB_WNDW
+        best_score = -AB_WNDW-1 if is_max_turn else AB_WNDW+1
         move_target = None
         for move, _ in sorted_moves:
-            self.node_searched += 1
-
-            #move = move[0]
-            self.make_move_trial(move)
+            self.make_move_trial(move) # updates also the turn
             #self.get_zoobrist_hash()
             max_turn = self.is_gold_turn()
             action_child, new_score = self.alphabeta_minimax_method(current_depth-1, max_turn, alpha, beta)
             self.undo_move_trial(move)
 
-            if is_max_turn and new_score > score:
+            if is_max_turn and new_score > best_score: # >= to avoid the null value
                 move_target = move
-                score = new_score
-                alpha = max(alpha, score)
+                best_score = new_score
+                alpha = max(alpha, new_score)
                 if alpha >= beta:
                     break
-            elif (not is_max_turn) and new_score < score:
+            elif (not is_max_turn) and new_score < best_score: # >= to avoid the null value
                 move_target = move
-                score = new_score
-                beta = min(beta, score)
+                best_score = new_score
+                beta = min(beta, new_score)
                 if alpha >= beta:
                     break
 
-        return move_target, score
+        #move_target_id = move_target.ID if move_target else "null"
+        #print("DEP { " + str(current_depth) + " } MOVE { " + move_target_id + " } SCORE { " + str(best_score) +" }")
+        return move_target, best_score
 
 
     def evaluation_function(self, move, A, B, C):
