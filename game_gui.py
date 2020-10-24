@@ -122,6 +122,14 @@ class GameGui():
                                                          self.square_size - 1)
                          )
 
+    def draw_last_move_path(self, start_sqr, end_sqr):
+        start_pos = (self.board_layout + start_sqr[1] * self.square_size + 0.5*self.square_size, self.board_layout + start_sqr[0] * self.square_size + 0.5*self.square_size)
+        end_pos   = (self.board_layout + end_sqr[1] * self.square_size+ 0.5*self.square_size, self.board_layout + end_sqr[0] * self.square_size + 0.5*self.square_size)
+        pygame.draw.line(self.screen, pygame.Color(55, 255, 55),
+                        start_pos,
+                        end_pos,
+                         3
+            )
 
     def draw_game_result(self, result):
         color = pygame.Color("blue")

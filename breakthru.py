@@ -315,6 +315,11 @@ class Breakthru():
                 move_list, capture_list = self.game.check_single_piece_moves(r, c)
                 self.game_gui.draw_highlighted_paths(r, c, right_turn, move_list, capture_list)
 
+            if len(self.game.game_log)> 0:
+                last_move = self.game.game_log[-1]
+                if last_move.ID != "skip":
+                    self.game_gui.draw_last_move_path(self.game.game_log[-1].start, self.game.game_log[-1].end)
+
             self.game_gui.draw_pieces(self.game.board)
             self.draw_game_elements()
             self.clock.tick(MAX_FPS)
