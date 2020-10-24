@@ -35,10 +35,16 @@ COLUMN_ROTATION = {
     8: "i", 9: "j",
     10: "k"
 }
-
-AB_WNDW = 100000
-MAX_TIME = 60000 #msec
+INFINITE = 100000
+AB_WNDW = 10000
+MAX_TIME = 1500000 #msec
 RANDOM_MATRIX = [[[randint(0, 2**64 - 1) for i in range(3)] for j in range(11)] for k in range(11)] # TODO 0 or 1
+
+EXACT = 0
+LOWERBOUND = -1
+UPPERBOUND = 1
+
+
 
 class GameEngine():
 
@@ -92,9 +98,9 @@ class GameEngine():
         self.ai_behaviour = ai_behaviour
         self.ai_timer = 0
         self.ai_time_calculation = 0
-        self.ai_deep = 3
+        self.ai_deep = 4
         self.node_searched = 0
-        self.transposition_table = {}
+        self.transposition_table = []
 
 
     ####################################################################################################################
@@ -366,7 +372,7 @@ class GameEngine():
         start_clock = pygame.time.get_ticks()
         self.ai_time_calculation = pygame.time.get_ticks()
         self.node_searched = 0
-
+        #self.transposition_table = []
         move, score = self.alphabeta_minimax_method(self.ai_deep, self.is_gold_turn(), -AB_WNDW, AB_WNDW)
 
         self.ai_timer += pygame.time.get_ticks() - start_clock
@@ -375,8 +381,65 @@ class GameEngine():
         return move, score
 
 
+    def order_moves(self, move_list, is_max_turn):
+        score_list = []
+        for move in move_list:
+            self.make_move_trial(move)
+            score_list.append(self.evaluation_function(None))
+            self.undo_move_trial(move)
+        sorted_moves = list(zip(move_list, score_list))
+        sorted_moves.sort(reverse=is_max_turn, key=lambda x: x[1])
+        return [value[0] for value in sorted_moves]
+
+
+    def get_zoobrist_hash(self):
+        hash = 0
+        for i in range(len(self.board)):
+            for j in range(len(self.board[0])):
+                if self.board[i][j]:
+                    piece_map = self.board[i][j] - 1
+                    hash ^= RANDOM_MATRIX[i][j][piece_map]
+        return hash
+
+
+
+
+    def retrieve_status_from_hash(self):
+        #print(len(self.transposition_table))
+        current_hash = self.get_zoobrist_hash()
+        for node in self.transposition_table:
+            if node.hash == current_hash:
+                return node
+        return None
+
+    def store_node_in_tt(self, best_move, best_score, current_flag, current_depth):
+        current_hash = self.get_zoobrist_hash()
+        #count = 1
+        for i, node in enumerate(self.transposition_table): #NEW replacement scheme
+            if node.hash == current_hash:
+                #print(count)
+                self.transposition_table.pop(i)
+                #count += 1
+                break
+        self.transposition_table.append(Node(current_hash, best_move, best_score, current_flag, current_depth))
+
+
     def alphabeta_minimax_method(self, current_depth, is_max_turn, alpha, beta):
         self.node_searched += 1
+
+        OLDA = alpha
+        node = self.retrieve_status_from_hash()
+        if node and node.depth >= current_depth:
+            if node.flag == EXACT:
+                #print("SERVE TT")
+                return node.best_move, node.best_value
+            elif node.flag == LOWERBOUND:
+                alpha = max(alpha, node.best_value)
+            else: #UPPERBOUND
+                beta = min(beta, node.best_value)
+            if alpha >= beta:
+                #print("SERVE TT")
+                return node.best_move, node.best_value
 
         game_status = self.check_victory()
         if current_depth == 0 or pygame.time.get_ticks() - self.ai_time_calculation > MAX_TIME or game_status != "GAME":
@@ -384,39 +447,44 @@ class GameEngine():
 
         next_moves = self.get_all_possible_moves()
 
-        #score_list = []
-        #for move in next_moves:
-        #    self.make_move_trial(move)
-        #    score_list.append(self.evaluation_function())
-        #    self.undo_move_trial(move)#
-        #sorted_moves = list(zip(next_moves, score_list))
-        #sorted_moves.sort(reverse=is_max_turn, key=lambda x: x[1])
+        # iterative deepening
+        # next_moves = self.order_moves(next_moves, is_max_turn)
 
-        best_score = -AB_WNDW-1 if is_max_turn else AB_WNDW+1
-        move_target = None
+
+        best_score = -INFINITE if is_max_turn else INFINITE
+        best_move = None
         for move in next_moves:
             self.make_move_trial(move) # updates also the turn
-            #self.get_zoobrist_hash()
             max_turn = self.is_gold_turn()
             action_child, new_score = self.alphabeta_minimax_method(current_depth-1, max_turn, alpha, beta)
             self.undo_move_trial(move)
 
-            if is_max_turn and new_score > best_score: # >= to avoid the null value
-                move_target = move
+            if is_max_turn and new_score > best_score:
+                best_move = move
                 best_score = new_score
                 alpha = max(alpha, new_score)
                 if alpha >= beta:
                     break
-            elif (not is_max_turn) and new_score < best_score: # >= to avoid the null value
-                move_target = move
+            elif (not is_max_turn) and new_score < best_score:
+                best_move = move
                 best_score = new_score
                 beta = min(beta, new_score)
                 if alpha >= beta:
                     break
 
+        # storing node on TT
+        current_flag = EXACT
+        if best_score <= OLDA:
+            current_flag = UPPERBOUND
+        elif best_score >= beta:
+            current_flag = LOWERBOUND
+
+
+        self.store_node_in_tt(best_move, best_score, current_flag, current_depth)
+
         #move_target_id = move_target.ID if move_target else "null"
         #print("DEP { " + str(current_depth) + " } MOVE { " + move_target_id + " } SCORE { " + str(best_score) +" }")
-        return move_target, best_score
+        return best_move, best_score
 
 
     def evaluation_function(self, status):
@@ -515,17 +583,6 @@ class GameEngine():
 ############################################## TRANSPOSITION TABLE #####################################################
 ########################################################################################################################
 
-    def get_zoobrist_hash(self):
-        hash = 0
-        for i in range(len(self.board)):
-            for j in range(len(self.board[0])):
-                if self.board[i][j]:
-                    piece_map = self.board[i][j] - 1
-                    hash ^= RANDOM_MATRIX[i][j][piece_map]
-        return hash
-
-
-
 class Move():
 
     def __init__(self, start_sq, end_sq, board):
@@ -570,3 +627,14 @@ class Move():
 
     def is_capture_flag(self):
         return True if self.piece_captured == F else False
+
+
+
+class Node():
+
+    def __init__(self, hash, best_move, best_value, flag, depth):
+        self.hash = hash
+        self.best_move = best_move
+        self.best_value = best_value
+        self.flag = flag
+        self.depth = depth
