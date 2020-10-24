@@ -98,7 +98,7 @@ class GameEngine():
         self.ai_behaviour = ai_behaviour
         self.ai_timer = 0
         self.ai_time_calculation = 0
-        self.ai_deep = 4
+        self.ai_deep = 3
         self.node_searched = 0
         self.transposition_table = []
 
@@ -402,8 +402,6 @@ class GameEngine():
         return hash
 
 
-
-
     def retrieve_status_from_hash(self):
         #print(len(self.transposition_table))
         current_hash = self.get_zoobrist_hash()
@@ -411,6 +409,7 @@ class GameEngine():
             if node.hash == current_hash:
                 return node
         return None
+
 
     def store_node_in_tt(self, best_move, best_score, current_flag, current_depth):
         current_hash = self.get_zoobrist_hash()
