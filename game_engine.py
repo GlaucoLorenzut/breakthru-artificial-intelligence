@@ -362,41 +362,12 @@ class GameEngine():
 ############################################## AI FUNCTIONS ############################################################
 ########################################################################################################################
 
-
-    def smart_nomnom_behaviour(self):
-        seed(datetime.now())
-        move_list = self.valid_moves
-
-        nomnom_list = []
-        for move in move_list:
-            if move.is_capture_move():
-                if move.is_capture_flag():
-                    return move
-                nomnom_list.append(move)
-
-        for move in move_list:
-            if move.piece_moved == F:
-                if move.end[0] == 0 or move.end[0] == len(self.board)-1 or move.end[1] == 0 or move.end[1] == len(self.board[0]) - 1:
-                    return move
-
-        if len(nomnom_list) != 0:
-            i = randint(0, len(nomnom_list) - 1)
-            return nomnom_list[i]
-        elif len(move_list) != 0:
-            i = randint(0, len(move_list) - 1)
-            return move_list[i]
-        else:
-            return None
-
-
     def ai_choose_move(self):
         start_clock = pygame.time.get_ticks()
         self.ai_time_calculation = pygame.time.get_ticks()
         self.node_searched = 0
 
         move, score = self.alphabeta_minimax_method(self.ai_deep, self.is_gold_turn(), -AB_WNDW, AB_WNDW)
-        if not move:
-            move = self.smart_nomnom_behaviour()
 
         self.ai_timer += pygame.time.get_ticks() - start_clock
 
