@@ -2,8 +2,15 @@ import os
 import pygame
 import game_engine
 import game_gui
-import janitor as jnt
-from pathlib import Path
+import sys
+#import janitor as jnt
+#from pathlib import Path
+
+# pyinstaller --noconfirm --onedir --console --add-data "./images;images/" --hidden-import "game_engine" --add-data "./game_engine.py;." --hidden-import "game_gui" --add-data "./game_gui.py;." --hidden-import "janitor" --add-data "./janitor.py;." "./breakthru.py"
+
+
+if getattr(sys, 'frozen', False):
+    os.chdir(sys._MEIPASS)
 
 IMGS_PATH = "images"
 SAVING_PATH = "saves"
@@ -82,10 +89,12 @@ class Breakthru():
         self.state = "MENU"
 
     def save_game_action(self):
-        jnt.pickle_save(self.game, Path(SAVING_PATH) / "save.pickle")
+        pass
+        #jnt.pickle_save(self.game, Path(SAVING_PATH) / "save.pickle")
 
     def load_game_action(self):
-        self.game = jnt.pickle_load(Path(SAVING_PATH) / "save.pickle")
+        pass
+        #self.game = jnt.pickle_load(Path(SAVING_PATH) / "save.pickle")
 
     def undo_move_action(self):
         move_id = self.game.undo_move()
@@ -120,7 +129,7 @@ class Breakthru():
 
 
     def init_sw(self):
-        jnt.create_dir(SAVING_PATH)
+        #jnt.create_dir(SAVING_PATH)
         pygame.display.set_caption("  Breakthru")
         pygame.init()
         pygame.font.init()
