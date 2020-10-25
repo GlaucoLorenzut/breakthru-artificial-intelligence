@@ -4,7 +4,6 @@ from random import randint
 from datetime import datetime
 
 
-
 # logic of turn
 G_1 = 0
 G_2 = 1

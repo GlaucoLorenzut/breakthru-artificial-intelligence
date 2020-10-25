@@ -3,12 +3,11 @@ import pygame
 import game_engine
 import game_gui
 import sys
-#import janitor as jnt
-#from pathlib import Path
+import janitor as saving_lib
+from pathlib import Path
 
-# pyinstaller --noconfirm --onedir --console --add-data "./images;images/" --hidden-import "game_engine" --add-data "./game_engine.py;." --hidden-import "game_gui" --add-data "./game_gui.py;." --hidden-import "janitor" --add-data "./janitor.py;." "./breakthru.py"
-
-
+# magic spell for pyinstaller
+# pyinstaller --noconfirm --onefile --windowed --add-data "C:/Users/Glauco/Desktop/UNI Maastricht/1_semester/breakthru-artificial-intelligence/game_engine.py;." --add-data "C:/Users/Glauco/Desktop/UNI Maastricht/1_semester/breakthru-artificial-intelligence/game_gui.py;." --add-data "C:/Users/Glauco/Desktop/UNI Maastricht/1_semester/breakthru-artificial-intelligence/images;images/" --add-data "C:/Users/Glauco/Desktop/UNI Maastricht/1_semester/breakthru-artificial-intelligence/janitor.py;."  "C:/Users/Glauco/Desktop/UNI Maastricht/1_semester/breakthru-artificial-intelligence/breakthru.py"
 if getattr(sys, 'frozen', False):
     os.chdir(sys._MEIPASS)
 
@@ -66,7 +65,7 @@ class Breakthru():
     ###################### BUTTON ACTIONS ######################
     def quit_action(self):
         pygame.quit()
-        quit()
+        sys.exit()
 
     def init_multiplayer_game_action(self):
         self.state = "GAME"
@@ -89,12 +88,10 @@ class Breakthru():
         self.state = "MENU"
 
     def save_game_action(self):
-        pass
-        #jnt.pickle_save(self.game, Path(SAVING_PATH) / "save.pickle")
+        saving_lib.pickle_save(self.game, Path(SAVING_PATH) / "save.pickle")
 
     def load_game_action(self):
-        pass
-        #self.game = jnt.pickle_load(Path(SAVING_PATH) / "save.pickle")
+        self.game = saving_lib.pickle_load(Path(SAVING_PATH) / "save.pickle")
 
     def undo_move_action(self):
         move_id = self.game.undo_move()
@@ -129,7 +126,7 @@ class Breakthru():
 
 
     def init_sw(self):
-        #jnt.create_dir(SAVING_PATH)
+        saving_lib.create_dir(SAVING_PATH)
         pygame.display.set_caption("  Breakthru")
         pygame.init()
         pygame.font.init()
