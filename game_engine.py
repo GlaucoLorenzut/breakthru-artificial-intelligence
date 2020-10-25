@@ -36,7 +36,7 @@ COLUMN_ROTATION = {
 }
 INFINITE = 100000
 AB_WNDW = 10000
-MAX_TIME = 1500000 #msec
+MAX_TIME = 15000 #msec
 RANDOM_MATRIX = [[[randint(0, 2**64 - 1) for i in range(3)] for j in range(11)] for k in range(11)] # TODO 0 or 1
 
 EXACT = 0
@@ -371,7 +371,6 @@ class GameEngine():
         start_clock = pygame.time.get_ticks()
         self.ai_time_calculation = pygame.time.get_ticks()
         self.node_searched = 0
-        #self.transposition_table = []
         move, score = self.alphabeta_minimax_method(self.ai_deep, self.is_gold_turn(), -AB_WNDW, AB_WNDW)
 
         self.ai_timer += pygame.time.get_ticks() - start_clock
@@ -402,7 +401,6 @@ class GameEngine():
 
 
     def retrieve_status_from_hash(self):
-        #print(len(self.transposition_table))
         current_hash = self.get_zoobrist_hash()
         for node in self.transposition_table:
             if node.hash == current_hash:
@@ -412,12 +410,9 @@ class GameEngine():
 
     def store_node_in_tt(self, best_move, best_score, current_flag, current_depth):
         current_hash = self.get_zoobrist_hash()
-        #count = 1
         for i, node in enumerate(self.transposition_table): #NEW replacement scheme
             if node.hash == current_hash:
-                #print(count)
                 self.transposition_table.pop(i)
-                #count += 1
                 break
         self.transposition_table.append(Node(current_hash, best_move, best_score, current_flag, current_depth))
 
@@ -445,9 +440,7 @@ class GameEngine():
 
         next_moves = self.get_all_possible_moves()
 
-        # iterative deepening
         # next_moves = self.order_moves(next_moves, is_max_turn)
-
 
         best_score = -INFINITE if is_max_turn else INFINITE
         best_move = None

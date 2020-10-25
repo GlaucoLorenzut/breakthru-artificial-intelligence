@@ -219,7 +219,7 @@ class Turner():
         self.height = size[1]
         self.color = color
         self.legenda_size = 28
-        self.text_size = 30
+        self.text_size = 28
         self.outline_color = outline_color
 
 
@@ -231,7 +231,7 @@ class Turner():
 
         # LEGENDA
         font = pygame.font.SysFont("calibri", self.legenda_size)
-        legenda = "TURN                         AI TIME"
+        legenda = "TURN                 AI TIME"
         text = font.render(legenda, 1, pygame.Color("white"))
         self.screen.blit(
             text,
@@ -300,9 +300,9 @@ class Logger():
         self.height = size[1]
         self.color = color
         self.text_list = []
-        self.text_size = 28
+        self.text_size = 24
         self.list_size = 12
-        self.text_layout = (x + 10, y + 12)
+        self.text_layout = (x + 8, y + 15)
         self.outline_color = outline_color
 
 

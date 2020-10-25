@@ -24,7 +24,7 @@ MENU_BUTTON_TEXT_SIZE = 30
 MENU_BUTTON_COLOR = pygame.Color("gray")
 
 GAME_BUTTON_SIZE = (130, 40)
-GAME_BUTTON_TEXT_SIZE = 23
+GAME_BUTTON_TEXT_SIZE = 22
 GAME_BUTTON_COLOR = pygame.Color("gray")
 
 TURNER_SIZE = (275, 50)
@@ -89,9 +89,15 @@ class Breakthru():
 
     def save_game_action(self):
         saving_lib.pickle_save(self.game, Path(SAVING_PATH) / "save.pickle")
+        self.logger.print_message("[game saved]")
 
     def load_game_action(self):
-        self.game = saving_lib.pickle_load(Path(SAVING_PATH) / "save.pickle")
+        load_game = saving_lib.pickle_load(Path(SAVING_PATH) / "save.pickle")
+        if load_game:
+            self.game = load_game
+            self.logger.print_message("[game loaded]")
+        else:
+            self.logger.print_message("[no games found]")
 
     def undo_move_action(self):
         move_id = self.game.undo_move()
