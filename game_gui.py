@@ -187,7 +187,7 @@ class Button():
 
         if self.text != '':
             color_text = (0, 0, 0) if self.enabled else (50, 50, 50)
-            font = pygame.font.SysFont(None, self.text_size)
+            font = pygame.font.SysFont("freesansbold.ttf", self.text_size)
             text = font.render(self.text, 1, color_text)
             self.screen.blit(
                 text,
@@ -229,7 +229,7 @@ class Turner():
         pygame.draw.rect(self.screen, self.color, (self.x, self.y, self.width, self.height), 0)
 
         # LEGENDA
-        font = pygame.font.SysFont(None, self.legenda_size)
+        font = pygame.font.SysFont("freesansbold.ttf", self.legenda_size)
         legenda = "TURN                         AI TIME"
         text = font.render(legenda, 1, pygame.Color("white"))
         self.screen.blit(
@@ -238,7 +238,7 @@ class Turner():
         )
 
         # TURN
-        font = pygame.font.SysFont(None, self.text_size)
+        font = pygame.font.SysFont("freesansbold.ttf", self.text_size)
 
         turn_text = "GOLD" if is_gold_turn else "SILVER"
         turn_color = pygame.Color("yellow") if is_gold_turn else pygame.Color("gray")
@@ -254,7 +254,7 @@ class Turner():
                          (layout_x, self.y + self.height), 3)
 
         # TIME
-        font = pygame.font.SysFont(None, self.text_size)
+        font = pygame.font.SysFont("freesansbold.ttf", self.text_size)
         time_text = self.get_text_time(time)#"99h : 59m : 59s"
         time_text = font.render(time_text, 1, pygame.Color("white"))
         self.screen.blit(
@@ -342,7 +342,7 @@ class Logger():
         pygame.draw.rect(self.screen, self.color, (self.x, self.y, self.width, self.height), 0)
 
         for i, text in enumerate(self.text_list):
-            font = pygame.font.SysFont(None, self.text_size)
+            font = pygame.font.SysFont("freesansbold.ttf", self.text_size)
             text = font.render(text, 1, pygame.Color("white"))
             self.screen.blit(
                 text,
