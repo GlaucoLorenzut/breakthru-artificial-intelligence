@@ -5,5 +5,7 @@ saves
 main
 build
 dist
-test.py
+test_stuff
+output
+debug.txt
 *.spec
