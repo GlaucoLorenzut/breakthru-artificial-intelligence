@@ -1,0 +1,22 @@
+
+# main
+
+# gui
+
+window:
+  width: 800
+  height: 600
+  fps: 60
+
+button:
+  width: 80
+  height: 50
+  color: [255, 0, 0]
+
+player:
+  speed: 5
+  color: [0, 255, 0]
+
+enemy:
+  speed: 3
+  color: [0, 0, 255]
