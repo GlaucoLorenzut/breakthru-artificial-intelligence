@@ -1,49 +1,31 @@
-import os
+
 import pygame
 import game_engine
 import game_gui
-import sys
-import janitor as saving_lib
+import os
+import utils.janitor as saving_lib
 from pathlib import Path
 
-# magic spell for pyinstaller
-# pyinstaller --noconfirm --onefile --windowed --add-data "C:/Users/Glauco/Desktop/UNI Maastricht/1_semester/breakthru-artificial-intelligence/game_engine.py;." --add-data "C:/Users/Glauco/Desktop/UNI Maastricht/1_semester/breakthru-artificial-intelligence/game_gui.py;." --add-data "C:/Users/Glauco/Desktop/UNI Maastricht/1_semester/breakthru-artificial-intelligence/images;images/" --add-data "C:/Users/Glauco/Desktop/UNI Maastricht/1_semester/breakthru-artificial-intelligence/janitor.py;."  "C:/Users/Glauco/Desktop/UNI Maastricht/1_semester/breakthru-artificial-intelligence/breakthru.py"
-if getattr(sys, 'frozen', False):
-    os.chdir(sys._MEIPASS)
+saving_lib.exe_installer()
 
-IMGS_PATH = "images"
-SAVING_PATH = "saves"
-DIMENSION = 11
-MAX_FPS = 15
-WINDOW_LAYOUT_X, WINDOW_LAYOUT_Y = 250, 80
-WINDOW_WIDTH, WINDOW_HEIGHT = 1050, 720
-BOARD_SIZE = 616
-
-MENU_BUTTON_SIZE = (200, 60)
-MENU_BUTTON_TEXT_SIZE = 30
-MENU_BUTTON_COLOR = pygame.Color("gray")
-
-GAME_BUTTON_SIZE = (130, 40)
-GAME_BUTTON_TEXT_SIZE = 22
-GAME_BUTTON_COLOR = pygame.Color("gray")
-
-TURNER_SIZE = (275, 50)
-TURNER_COLOR = pygame.Color("blue")
-TURNER_COLOR_OUTLINE = pygame.Color("white")
-
-LOGGER_SIZE = (275, 360)
-LOGGER_COLOR = pygame.Color("blue")
-LOGGER_COLOR_OUTLINE = pygame.Color("white")
-
+import yaml
 
 
 class Breakthru():
 
-    def __init__(self):
+    def __init__(self, window_size, board_length):
+        self.window_size = window_size
+        self.board_length = board_length
+        self.row_dimension = 11 # 11x11
+
+        self.images_path = Path("images")
+        self.saves_path = Path("saves")
+
         self.state    = "MENU"
-        self.screen   =  pygame.display.set_mode((WINDOW_WIDTH, WINDOW_HEIGHT))
+        
+        self.screen   =  pygame.display.set_mode(self.window_size)
         self.clock    =  pygame.time.Clock()
-        self.game_gui =  game_gui.GameGui(self.screen, BOARD_SIZE, DIMENSION)
+        self.game_gui =  game_gui.GameGui(self.screen, self.board_length, self.row_dimension)
         self.game     = None
         self.sq_selected = ()
         self.pieces_selected = []
@@ -67,10 +49,12 @@ class Breakthru():
         pygame.quit()
         sys.exit()
 
+
     def init_multiplayer_game_action(self):
         self.state = "GAME"
         self.game = game_engine.GameEngine()
         self.multi_player = True
+
 
     def init_vs_goldAI_game_action(self):
         self.state = "GAME"
@@ -78,26 +62,31 @@ class Breakthru():
         self.AI_turn = "G"
         self.game = game_engine.GameEngine("THE_ALPHABETA_GUY")
 
+
     def init_vs_silverAI_game_action(self):
         self.state = "GAME"
         self.multi_player = False
         self.AI_turn = "S"
         self.game = game_engine.GameEngine("THE_ALPHABETA_GUY")
 
+
     def open_menu_action(self):
         self.state = "MENU"
 
+
     def save_game_action(self):
-        saving_lib.pickle_save(self.game, Path(SAVING_PATH) / "save.pickle")
+        saving_lib.pickle_save(self.game, self.saves_path / "save.pickle")
         self.logger.print_message("[game saved]")
 
+
     def load_game_action(self):
-        load_game = saving_lib.pickle_load(Path(SAVING_PATH) / "save.pickle")
+        load_game = saving_lib.pickle_load(self.saves_path / "save.pickle")
         if load_game:
             self.game = load_game
             self.logger.print_message("[game loaded]")
         else:
             self.logger.print_message("[no games found]")
+
 
     def undo_move_action(self):
         move_id = self.game.undo_move()
@@ -108,6 +97,7 @@ class Breakthru():
         if not self.multi_player and move_id:
             self.game_pause = True
             self.logger.print_message("[press P to continue]")
+
 
     def restore_move_action(self):
         gold_turn = self.game.is_gold_turn()
@@ -121,6 +111,7 @@ class Breakthru():
             self.game_pause = True
             self.logger.print_message("[press P to continue]")
 
+
     def skip_move_action(self):
         gold_turn = self.game.is_gold_turn()
         move_id = self.game.skip_move()
@@ -132,14 +123,14 @@ class Breakthru():
 
 
     def init_sw(self):
-        saving_lib.create_dir(SAVING_PATH)
+        saving_lib.create_dir(self.saves_path)
         pygame.display.set_caption("  Breakthru")
         pygame.init()
         pygame.font.init()
 
         ######### INIT MENU ELEMENTS #############
         A = self.game_gui.board_size + self.game_gui.board_layout
-        menu_layout_dx = (A + 0.5*(WINDOW_WIDTH - A) - 0.5*MENU_BUTTON_SIZE[0], 0.5*WINDOW_HEIGHT)
+        menu_layout_dx = (A + 0.5*(self.window_size[0] - A) - 0.5*MENU_BUTTON_SIZE[0], 0.5*self.window_size[1])
 
 
         self.button_vs_gold_AI = game_gui.Button(self.screen,
@@ -168,7 +159,7 @@ class Breakthru():
 
         ######## INIT GAME ELEMENTS ###############
         A = self.game_gui.board_size + 2*self.game_gui.board_layout
-        game_layout_dx = (0.5*A + 0.5*WINDOW_WIDTH, self.game_gui.board_layout+ 1)
+        game_layout_dx = (0.5*A + 0.5*self.window_size[0], self.game_gui.board_layout+ 1)
 
 
         self.turner = game_gui.Turner(self.screen,
@@ -181,7 +172,7 @@ class Breakthru():
 
         self.logger = game_gui.Logger(self.screen,
                                  game_layout_dx[0] - 0.5*LOGGER_SIZE[0],
-                                 WINDOW_HEIGHT - game_layout_dx[1] - LOGGER_SIZE[1] + 9,
+                                 self.window_size[1] - game_layout_dx[1] - LOGGER_SIZE[1] + 9,
                                  LOGGER_SIZE,
                                  LOGGER_COLOR,
                                  LOGGER_COLOR_OUTLINE,
@@ -244,6 +235,7 @@ class Breakthru():
         self.button_vs_silver_AI.draw()
         self.button_multi_player.draw()
 
+
     def draw_game_elements(self):
         self.turner.draw(self.game.is_gold_turn(), self.game.ai_timer)
         self.logger.draw()
@@ -277,7 +269,7 @@ class Breakthru():
 
     def game_screen(self):
         self.game_gui.init_board_index()
-        self.game_gui.load_images(IMGS_PATH)
+        self.game_gui.load_images(self.images_path)
 
         self.sq_selected = ()
         self.pieces_selected = []
@@ -383,14 +375,23 @@ class Breakthru():
 
 
 if __name__ == "__main__":
-    os.environ['SDL_VIDEO_WINDOW_POS'] = "%d,%d" % (WINDOW_LAYOUT_X, WINDOW_LAYOUT_Y)
-    bkt = Breakthru()
+    with open('config\\config.yaml', 'r') as f:
+        config = yaml.safe_load(f)
+
+    # set the gui position on the screen
+    os.environ['SDL_VIDEO_WINDOW_POS'] = "%d,%d" % config['window']['position']
+
+    bkt = Breakthru(
+        window_size=config['window']['size'], 
+        board_length=config['board']['length']
+        )
+    
     bkt.init_sw()
 
     while True:
         bkt.screen.fill(pygame.Color("black"))
 
-        if bkt.state != "GAME": #== "MENU" or bkt.state == "GOLD_WIN" or bkt.state == "SILVER_WIN" or bkt.state == "DRAW":
+        if bkt.state != "GAME": # bkt.state == "MENU" | "GOLD_WIN" | "SILVER_WIN" | "DRAW":
             bkt.menu_screen()
         elif bkt.state == "GAME":
             bkt.game_screen()

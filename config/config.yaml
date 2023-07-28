@@ -1,22 +1,31 @@
 
 # main
+max_fps: 15
 
 # gui
-
 window:
-  width: 800
-  height: 600
-  fps: 60
+  position: [250, 80]
+  size: [1050, 720]
 
-button:
-  width: 80
-  height: 50
-  color: [255, 0, 0]
+board:
+  length: 616
 
-player:
-  speed: 5
-  color: [0, 255, 0]
+menu_button:
+  size: [200, 60]
+  text_size: 30
+  color: "gray"
 
-enemy:
-  speed: 3
-  color: [0, 0, 255]
+game_button:
+  size: [130, 40]
+  text_size: 22
+  color: "gray"
+
+turner:
+  size: [275, 50]
+  color: "blue"
+  color_outline: "white"
+
+logger:
+  size: [275, 360]
+  color: "blue"
+  color_outline: "white"

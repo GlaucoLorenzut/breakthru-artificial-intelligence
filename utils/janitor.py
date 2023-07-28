@@ -1,5 +1,12 @@
 import os
+import sys
 import pickle
+
+def exe_installer():
+    # magic spell for pyinstaller
+    # pyinstaller --noconfirm --onefile --windowed --add-data "C:/Users/Glauco/Desktop/UNI Maastricht/1_semester/breakthru-artificial-intelligence/game_engine.py;." --add-data "C:/Users/Glauco/Desktop/UNI Maastricht/1_semester/breakthru-artificial-intelligence/game_gui.py;." --add-data "C:/Users/Glauco/Desktop/UNI Maastricht/1_semester/breakthru-artificial-intelligence/images;images/" --add-data "C:/Users/Glauco/Desktop/UNI Maastricht/1_semester/breakthru-artificial-intelligence/janitor.py;."  "C:/Users/Glauco/Desktop/UNI Maastricht/1_semester/breakthru-artificial-intelligence/breakthru.py"
+    if getattr(sys, 'frozen', False):
+        os.chdir(sys._MEIPASS)
 
 
 def create_dir(path):
