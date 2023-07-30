@@ -10,7 +10,6 @@ saving_lib.exe_installer()
 
 import yaml
 
-
 class Breakthru():
 
     def __init__(self, window_size, board_length):
@@ -23,9 +22,9 @@ class Breakthru():
 
         self.state    = "MENU"
         
-        self.screen   =  pygame.display.set_mode(self.window_size)
-        self.clock    =  pygame.time.Clock()
-        self.game_gui =  game_gui.GameGui(self.screen, self.board_length, self.row_dimension)
+        self.screen   = pygame.display.set_mode(self.window_size)
+        self.clock    = pygame.time.Clock()
+        self.game_gui = game_gui.GameGui(self.screen, self.board_length, self.row_dimension)
         self.game     = None
         self.sq_selected = ()
         self.pieces_selected = []
@@ -44,6 +43,8 @@ class Breakthru():
         self.AI_turn = None
         self.game_pause = False
 
+        self.init_sw()
+
     ###################### BUTTON ACTIONS ######################
     def quit_action(self):
         pygame.quit()
@@ -52,22 +53,15 @@ class Breakthru():
 
     def init_multiplayer_game_action(self):
         self.state = "GAME"
-        self.game = game_engine.GameEngine()
         self.multi_player = True
+        self.game = game_engine.GameEngine()
+        
 
-
-    def init_vs_goldAI_game_action(self):
+    def init_singleplayer_game_action(self, opponent, ai="THE_ALPHABETA_GUY"):
         self.state = "GAME"
         self.multi_player = False
-        self.AI_turn = "G"
-        self.game = game_engine.GameEngine("THE_ALPHABETA_GUY")
-
-
-    def init_vs_silverAI_game_action(self):
-        self.state = "GAME"
-        self.multi_player = False
-        self.AI_turn = "S"
-        self.game = game_engine.GameEngine("THE_ALPHABETA_GUY")
+        self.game = game_engine.GameEngine(ai)
+        self.AI_turn = opponent # G against golden AI
 
 
     def open_menu_action(self):
@@ -131,7 +125,6 @@ class Breakthru():
         ######### INIT MENU ELEMENTS #############
         A = self.game_gui.board_size + self.game_gui.board_layout
         menu_layout_dx = (A + 0.5*(self.window_size[0] - A) - 0.5*MENU_BUTTON_SIZE[0], 0.5*self.window_size[1])
-
 
         self.button_vs_gold_AI = game_gui.Button(self.screen,
                                                menu_layout_dx[0],
@@ -256,8 +249,8 @@ class Breakthru():
                     self.quit_action()
                 elif event.type == pygame.MOUSEBUTTONDOWN:
                     mouse_pos = pygame.mouse.get_pos()
-                    self.button_vs_gold_AI.check(mouse_pos, self.init_vs_goldAI_game_action)
-                    self.button_vs_silver_AI.check(mouse_pos, self.init_vs_silverAI_game_action)
+                    self.button_vs_gold_AI.check(mouse_pos, lambda: self.init_singleplayer_game_action("G"))
+                    self.button_vs_silver_AI.check(mouse_pos, lambda: self.init_singleplayer_game_action("S"))
                     self.button_multi_player.check(mouse_pos, self.init_multiplayer_game_action)
 
             self.draw_menu_elements()
@@ -386,8 +379,6 @@ if __name__ == "__main__":
         board_length=config['board']['length']
         )
     
-    bkt.init_sw()
-
     while True:
         bkt.screen.fill(pygame.Color("black"))
 
