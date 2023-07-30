@@ -5,6 +5,7 @@ import game_gui
 import os
 import utils.janitor as saving_lib
 from pathlib import Path
+import sys
 
 saving_lib.exe_installer()
 
@@ -122,32 +123,48 @@ class Breakthru():
         pygame.init()
         pygame.font.init()
 
+        m_btn_size = config['menu_button']['size']
+        m_btn_color = config['menu_button']['color']
+        m_btn_txt_size = config['menu_button']['text_size']
+
+        g_btn_size = config['game_button']['size']
+        g_btn_color = config['game_button']['color']
+        g_btn_txt_size = config['game_button']['text_size']
+
+        turner_size          = config['turner']['size']
+        turner_color         = config['turner']['color']
+        turner_color_outline = config['turner']['color_outline']
+
+        logger_size          = config['logger']['size']
+        logger_color         = config['logger']['color']
+        logger_color_outline = config['logger']['color_outline']
+
         ######### INIT MENU ELEMENTS #############
         A = self.game_gui.board_size + self.game_gui.board_layout
-        menu_layout_dx = (A + 0.5*(self.window_size[0] - A) - 0.5*MENU_BUTTON_SIZE[0], 0.5*self.window_size[1])
+        menu_layout_dx = (A + 0.5*(self.window_size[0] - A) - 0.5*m_btn_size[0], 0.5*self.window_size[1])
 
         self.button_vs_gold_AI = game_gui.Button(self.screen,
                                                menu_layout_dx[0],
-                                               menu_layout_dx[1] - 0.5*MENU_BUTTON_SIZE[1] - MENU_BUTTON_SIZE[1] - 70,
-                                               MENU_BUTTON_SIZE,
-                                               MENU_BUTTON_COLOR,
-                                               MENU_BUTTON_TEXT_SIZE,
+                                               menu_layout_dx[1] - 0.5*m_btn_size[1] - m_btn_size[1] - 70,
+                                               m_btn_size,
+                                               m_btn_color,
+                                               m_btn_txt_size,
                                                "vs Gold AI")
 
         self.button_vs_silver_AI = game_gui.Button(self.screen,
                                                menu_layout_dx[0],
-                                               menu_layout_dx[1] - 0.5*MENU_BUTTON_SIZE[1],
-                                               MENU_BUTTON_SIZE,
-                                               MENU_BUTTON_COLOR,
-                                               MENU_BUTTON_TEXT_SIZE,
+                                               menu_layout_dx[1] - 0.5*m_btn_size[1],
+                                               m_btn_size,
+                                               m_btn_color,
+                                               m_btn_txt_size,
                                                "vs Silver AI")
 
         self.button_multi_player = game_gui.Button(self.screen,
                                                menu_layout_dx[0],
-                                               menu_layout_dx[1] - 0.5*MENU_BUTTON_SIZE[1] + MENU_BUTTON_SIZE[1] + 70,
-                                               MENU_BUTTON_SIZE,
-                                               MENU_BUTTON_COLOR,
-                                               MENU_BUTTON_TEXT_SIZE,
+                                               menu_layout_dx[1] - 0.5*m_btn_size[1] + m_btn_size[1] + 70,
+                                               m_btn_size,
+                                               m_btn_color,
+                                               m_btn_txt_size,
                                                "Multi Player")
 
         ######## INIT GAME ELEMENTS ###############
@@ -156,70 +173,70 @@ class Breakthru():
 
 
         self.turner = game_gui.Turner(self.screen,
-                                 game_layout_dx[0] - 0.5*TURNER_SIZE[0],
+                                 game_layout_dx[0] - 0.5*turner_size[0],
                                  game_layout_dx[1],
-                                 TURNER_SIZE,
-                                 TURNER_COLOR,
-                                 TURNER_COLOR_OUTLINE,
+                                 turner_size,
+                                 turner_color,
+                                 turner_color_outline,
                                  )
 
         self.logger = game_gui.Logger(self.screen,
-                                 game_layout_dx[0] - 0.5*LOGGER_SIZE[0],
-                                 self.window_size[1] - game_layout_dx[1] - LOGGER_SIZE[1] + 9,
-                                 LOGGER_SIZE,
-                                 LOGGER_COLOR,
-                                 LOGGER_COLOR_OUTLINE,
+                                 game_layout_dx[0] - 0.5*logger_size[0],
+                                 self.window_size[1] - game_layout_dx[1] - logger_size[1] + 9,
+                                 logger_size,
+                                 logger_color,
+                                 logger_color_outline,
                                  )
 
-        button_layout_sx_dx = (-(GAME_BUTTON_SIZE[0] + 10), 10)
-        button_layout_vertical = TURNER_SIZE[1]
+        button_layout_sx_dx = (-(g_btn_size[0] + 10), 10)
+        button_layout_vertical = turner_size[1]
 
         self.button_save_game = game_gui.Button(self.screen,
                                                game_layout_dx[0] + button_layout_sx_dx[0],
                                                game_layout_dx[1] + button_layout_vertical + 20,
-                                               GAME_BUTTON_SIZE,
-                                               GAME_BUTTON_COLOR,
-                                               GAME_BUTTON_TEXT_SIZE,
+                                               g_btn_size,
+                                               g_btn_color,
+                                               g_btn_txt_size,
                                                "Save Game")
 
         self.button_load_game = game_gui.Button(self.screen,
                                                game_layout_dx[0] + button_layout_sx_dx[1],
                                                game_layout_dx[1] + button_layout_vertical + 20,
-                                               GAME_BUTTON_SIZE,
-                                               GAME_BUTTON_COLOR,
-                                               GAME_BUTTON_TEXT_SIZE,
+                                               g_btn_size,
+                                               g_btn_color,
+                                               g_btn_txt_size,
                                                "Load Game")
 
         self.button_undo_move = game_gui.Button(self.screen,
                                                game_layout_dx[0] + button_layout_sx_dx[0],
-                                               game_layout_dx[1] + button_layout_vertical + GAME_BUTTON_SIZE[1] + 40,
-                                               GAME_BUTTON_SIZE,
-                                               GAME_BUTTON_COLOR,
-                                               GAME_BUTTON_TEXT_SIZE,
+                                               game_layout_dx[1] + button_layout_vertical + g_btn_size[1] + 40,
+                                               g_btn_size,
+                                               g_btn_color,
+                                               g_btn_txt_size,
                                                "Undo Move")
 
         self.button_restore_move = game_gui.Button(self.screen,
                                                game_layout_dx[0] + button_layout_sx_dx[1],
-                                               game_layout_dx[1] + button_layout_vertical + GAME_BUTTON_SIZE[1] + 40,
-                                               GAME_BUTTON_SIZE,
-                                               GAME_BUTTON_COLOR,
-                                               GAME_BUTTON_TEXT_SIZE,
+                                               game_layout_dx[1] + button_layout_vertical + g_btn_size[1] + 40,
+                                               g_btn_size,
+                                               g_btn_color,
+                                               g_btn_txt_size,
                                                "Restore Move")
 
         self.button_skip_round = game_gui.Button(self.screen,
                                                game_layout_dx[0] + button_layout_sx_dx[0],
-                                               game_layout_dx[1] + button_layout_vertical + 2*GAME_BUTTON_SIZE[1] + 60,
-                                               GAME_BUTTON_SIZE,
-                                               GAME_BUTTON_COLOR,
-                                               GAME_BUTTON_TEXT_SIZE,
+                                               game_layout_dx[1] + button_layout_vertical + 2*g_btn_size[1] + 60,
+                                               g_btn_size,
+                                               g_btn_color,
+                                               g_btn_txt_size,
                                                "Skip First Play")
 
         self.button_quit_game = game_gui.Button(self.screen,
                                                game_layout_dx[0] + button_layout_sx_dx[1],
-                                               game_layout_dx[1] + button_layout_vertical + 2*GAME_BUTTON_SIZE[1] + 60,
-                                               GAME_BUTTON_SIZE,
-                                               GAME_BUTTON_COLOR,
-                                               GAME_BUTTON_TEXT_SIZE,
+                                               game_layout_dx[1] + button_layout_vertical + 2*g_btn_size[1] + 60,
+                                               g_btn_size,
+                                               g_btn_color,
+                                               g_btn_txt_size,
                                                "Quit Game")
 
 
@@ -256,7 +273,7 @@ class Breakthru():
             self.draw_menu_elements()
             self.game_gui.draw_game_result(self.state)
 
-            self.clock.tick(MAX_FPS)
+            self.clock.tick(config['max_fps'])
             pygame.display.update()
 
 
@@ -318,7 +335,7 @@ class Breakthru():
 
             self.game_gui.draw_pieces(self.game.board)
             self.draw_game_elements()
-            self.clock.tick(MAX_FPS)
+            self.clock.tick(config['max_fps'])
             pygame.display.update()
 
 
@@ -372,7 +389,8 @@ if __name__ == "__main__":
         config = yaml.safe_load(f)
 
     # set the gui position on the screen
-    os.environ['SDL_VIDEO_WINDOW_POS'] = "%d,%d" % config['window']['position']
+    win_pos_x, win_pos_y = config['window']['position']
+    os.environ['SDL_VIDEO_WINDOW_POS'] = "%d,%d" % (win_pos_x, win_pos_y)
 
     bkt = Breakthru(
         window_size=config['window']['size'], 
