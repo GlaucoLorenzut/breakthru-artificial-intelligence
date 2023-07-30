@@ -18,22 +18,11 @@ S = 2  # SILVER ship
 F = 3  # FLAG
 
 ROW_NOTATION = {
-    0: "11", 1: "10",
-    2: "9", 3: "8",
-    4: "7", 5: "6",
-    6: "5", 7: "4",
-    8: "3", 9: "2",
-    10: "1"
-}
+    0: "11", 1: "10", 2: "9", 3: "8", 4: "7", 5: "6", 6: "5", 7: "4", 8: "3", 9: "2", 10: "1"}
 
 COLUMN_ROTATION = {
-    0: "a", 1: "b",
-    2: "c", 3: "d",
-    4: "e", 5: "f",
-    6: "g", 7: "h",
-    8: "i", 9: "j",
-    10: "k"
-}
+    0: "a", 1: "b", 2: "c", 3: "d", 4: "e", 5: "f", 6: "g", 7: "h", 8: "i", 9: "j", 10: "k"}
+
 INFINITE = 100000
 AB_WNDW = 10000
 MAX_TIME = 15000 #msec
@@ -42,7 +31,6 @@ RANDOM_MATRIX = [[[randint(0, 2**64 - 1) for i in range(3)] for j in range(11)] 
 EXACT = 0
 LOWERBOUND = -1
 UPPERBOUND = 1
-
 
 
 class GameEngine():
