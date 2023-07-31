@@ -2,6 +2,7 @@ import pygame
 from random import seed
 from random import randint
 from datetime import datetime
+import sys
 
 
 # logic of turn
@@ -23,9 +24,8 @@ ROW_NOTATION = {
 COLUMN_ROTATION = {
     0: "a", 1: "b", 2: "c", 3: "d", 4: "e", 5: "f", 6: "g", 7: "h", 8: "i", 9: "j", 10: "k"}
 
-INFINITE = 100000
 AB_WNDW = 10000
-MAX_TIME = 15000 #msec
+MAX_TIME = 500000 #msec
 RANDOM_MATRIX = [[[randint(0, 2**64 - 1) for i in range(3)] for j in range(11)] for k in range(11)] # TODO 0 or 1
 
 EXACT = 0
@@ -50,19 +50,19 @@ class GameEngine():
             [0, 0, 0, S, S, S, S, S, 0, 0, 0],
             [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0]
         ]
-        #self.board = [
-        #    [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
-        #    [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
-        #    [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
-        #    [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
-        #    [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
-        #    [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
-        #    [0, 0, 0, G, F, 0, 0, 0, 0, 0, 0],
-        #    [0, S, 0, S, 0, 0, 0, 0, 0, 0, 0],
-        #    [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
-        #    [0, 0, 0, 0, S, 0, 0, 0, 0, 0, 0],
-        #    [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0]
-        #]
+        # self.board = [
+        #     [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
+        #     [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
+        #     [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
+        #     [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
+        #     [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
+        #     [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
+        #     [0, 0, 0, G, F, 0, 0, 0, 0, 0, 0],
+        #     [0, S, 0, S, 0, 0, 0, 0, 0, 0, 0],
+        #     [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
+        #     [0, 0, 0, 0, S, 0, 0, 0, 0, 0, 0],
+        #     [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0]
+        # ]
         #self.board = [
         #    [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
         #    [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
@@ -239,7 +239,7 @@ class GameEngine():
             return restore_move.ID
 
 
-    def get_all_possible_moves(self):
+    def get_all_possible_moves(self, ordered=True): # ordered according cost value
         moves = []
 
         if self.is_first_move:
@@ -251,6 +251,10 @@ class GameEngine():
             for c in range(len(self.board[r])):
                 if self.is_piece_of_right_turn(r, c):
                     self.get_piece_moves(r, c, moves)
+
+        if ordered:
+            moves.sort(reverse=True, key=lambda x: x.cost)
+
         return moves
 
 
@@ -359,7 +363,7 @@ class GameEngine():
         start_clock = pygame.time.get_ticks()
         self.ai_time_calculation = pygame.time.get_ticks()
         self.node_searched = 0
-        move, score = self.alphabeta_minimax_method(self.ai_deep, self.is_gold_turn(), -AB_WNDW, AB_WNDW)
+        move, score = self.minimax_alphabeta_method(self.ai_deep, -AB_WNDW, AB_WNDW, self.is_gold_turn())
 
         self.ai_timer += pygame.time.get_ticks() - start_clock
 
@@ -367,14 +371,14 @@ class GameEngine():
         return move, score
 
 
-    def order_moves(self, move_list, is_max_turn):
+    def order_moves(self, move_list, maximizing_player):
         score_list = []
         for move in move_list:
             self.make_move_trial(move)
             score_list.append(self.evaluation_function(None))
             self.undo_move_trial(move)
         sorted_moves = list(zip(move_list, score_list))
-        sorted_moves.sort(reverse=is_max_turn, key=lambda x: x[1])
+        sorted_moves.sort(reverse=maximizing_player, key=lambda x: x[1])
         return [value[0] for value in sorted_moves]
 
 
@@ -405,65 +409,81 @@ class GameEngine():
         self.transposition_table.append(Node(current_hash, best_move, best_score, current_flag, current_depth))
 
 
-    def alphabeta_minimax_method(self, current_depth, is_max_turn, alpha, beta):
+    def minimax_alphabeta_method(self, depth, alpha, beta, maximizing_player):
         self.node_searched += 1
 
-        OLDA = alpha
-        node = self.retrieve_status_from_hash()
-        if node and node.depth >= current_depth:
-            if node.flag == EXACT:
-                #print("SERVE TT")
-                return node.best_move, node.best_value
-            elif node.flag == LOWERBOUND:
-                alpha = max(alpha, node.best_value)
-            else: #UPPERBOUND
-                beta = min(beta, node.best_value)
-            if alpha >= beta:
-                #print("SERVE TT")
-                return node.best_move, node.best_value
-
         game_status = self.check_victory()
-        if current_depth == 0 or pygame.time.get_ticks() - self.ai_time_calculation > MAX_TIME or game_status != "GAME":
+        over_time = (pygame.time.get_ticks() - self.ai_time_calculation) > MAX_TIME
+        if depth == 0 or over_time or game_status != "GAME":
             return None, self.evaluation_function(game_status)
 
-        next_moves = self.get_all_possible_moves()
+        next_moves = self.get_all_possible_moves(ordered=True)
 
         # next_moves = self.order_moves(next_moves, is_max_turn)
 
-        best_score = -INFINITE if is_max_turn else INFINITE
-        best_move = None
-        for move in next_moves:
-            self.make_move_trial(move) # updates also the turn
-            max_turn = self.is_gold_turn()
-            action_child, new_score = self.alphabeta_minimax_method(current_depth-1, max_turn, alpha, beta)
-            self.undo_move_trial(move)
+        if maximizing_player:
+            max_eval = -sys.float_info.max
+            best_move = None
+            for move in next_moves:
+                self.make_move_trial(move)
+                next_move, eval = self.minimax_alphabeta_method(depth-1, alpha, beta, maximizing_player=False)
+                self.undo_move_trial(move)
+                spam=max_eval
+                max_eval = max(max_eval, eval)
+                if spam != max_eval:
+                    best_move = move
+                alpha = max(alpha, eval)
+                if beta <= alpha:
+                    break
+            return best_move, max_eval
+        else:
+            min_eval = sys.float_info.max
+            best_move = None
+            for move in next_moves:
+                self.make_move_trial(move)
+                next_move, eval = self.minimax_alphabeta_method(depth-1, alpha, beta, maximizing_player=True)
+                self.undo_move_trial(move)
+                spam=min_eval
+                min_eval = min(min_eval, eval)
+                if spam != min_eval:
+                    best_move = move
+                beta = min(beta, eval)
+                if beta <= alpha:
+                    break
+            return best_move, min_eval
 
-            if is_max_turn and new_score > best_score:
-                best_move = move
-                best_score = new_score
-                alpha = max(alpha, new_score)
-                if alpha >= beta:
-                    break
-            elif (not is_max_turn) and new_score < best_score:
-                best_move = move
-                best_score = new_score
-                beta = min(beta, new_score)
-                if alpha >= beta:
-                    break
+        
+        # best_move = None
+        # for move in next_moves:
+        #     self.make_move_trial(move) # updates also the turn
+        #     max_turn = self.is_gold_turn()
+        #     action_child, new_score = self.minimax_alphabeta_method(depth-1, max_turn, alpha, beta)
+        #     self.undo_move_trial(move)
+
+        #     if is_max_turn and new_score > best_score:
+        #         best_move = move
+        #         best_score = new_score
+        #         alpha = max(alpha, new_score)
+        #         if alpha >= beta:
+        #             break
+        #     elif (not is_max_turn) and new_score < best_score:
+        #         best_move = move
+        #         best_score = new_score
+        #         beta = min(beta, new_score)
+        #         if alpha >= beta:
+        #             break
 
         # storing node on TT
-        current_flag = EXACT
-        if best_score <= OLDA:
-            current_flag = UPPERBOUND
-        elif best_score >= beta:
-            current_flag = LOWERBOUND
+        # current_flag = EXACT
+        # if best_score <= OLDA:
+        #     current_flag = UPPERBOUND
+        # elif best_score >= beta:
+        #     current_flag = LOWERBOUND
 
 
-        self.store_node_in_tt(best_move, best_score, current_flag, current_depth)
+        # self.store_node_in_tt(best_move, best_score, current_flag, depth)
 
-        #move_target_id = move_target.ID if move_target else "null"
-        #print("DEP { " + str(current_depth) + " } MOVE { " + move_target_id + " } SCORE { " + str(best_score) +" }")
-        return best_move, best_score
+        #return best_move, best_score
 
 
     def evaluation_function(self, status):
