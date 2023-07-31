@@ -426,7 +426,8 @@ class GameEngine():
             best_move = None
             for move in next_moves:
                 self.make_move_trial(move)
-                next_move, eval = self.minimax_alphabeta_method(depth-1, alpha, beta, maximizing_player=False)
+                next_turn_maximizing_player = self.is_gold_turn()
+                next_move, eval = self.minimax_alphabeta_method(depth-1, alpha, beta, maximizing_player=next_turn_maximizing_player)
                 self.undo_move_trial(move)
                 spam=max_eval
                 max_eval = max(max_eval, eval)
@@ -441,7 +442,8 @@ class GameEngine():
             best_move = None
             for move in next_moves:
                 self.make_move_trial(move)
-                next_move, eval = self.minimax_alphabeta_method(depth-1, alpha, beta, maximizing_player=True)
+                next_turn_maximizing_player = self.is_gold_turn()
+                next_move, eval = self.minimax_alphabeta_method(depth-1, alpha, beta, maximizing_player=next_turn_maximizing_player)
                 self.undo_move_trial(move)
                 spam=min_eval
                 min_eval = min(min_eval, eval)
